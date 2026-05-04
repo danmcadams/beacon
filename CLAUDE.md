@@ -103,6 +103,54 @@ Visual design reference: `~/projects/beacon_design_handoff/`. The HTML/JSX is **
 
 ---
 
+## Established patterns (read this before building any new page)
+
+These are the local decisions already baked into the codebase. Don't re-derive them — just follow them.
+
+### Multi-step wizard
+
+State lives in a session-backed class in `App\Wizard\` (see `ProjectWizardState`, `ScheduleWizardState`). Each step calls `$state->setStep('name', $data)` and guards entry with `$state->hasStep('prev-step')`. On the final step, the controller reads `$state->all()`, writes to the DB, calls `$state->clear()`, and redirects.
+
+Template: each wizard page extends a `_layout.html.twig` in `templates/<feature>/wizard/`. The layout handles the top bar, the left-rail summary, the breadcrumb, the step stepper (`wiz-stepper`), and the card wrapper (`wiz-card`). Individual step files only fill `{% block step_body %}` (the form fields) and `{% block step_actions %}` (the prev/next/cancel buttons).
+
+Key CSS classes: `wiz-grid`, `wiz-stepper`, `wiz-stepper__btn--active/done/upcoming`, `wiz-card`, `wiz-field`, `wiz-input`, `wiz-textarea`, `wiz-actions`.
+
+### htmx redirect after form submit
+
+When an htmx form posts and the server needs to trigger a full page navigation (e.g. after saving a block), return an empty `Response` with the `HX-Redirect` header:
+
+```php
+$response = new Response();
+$response->headers->set('HX-Redirect', $this->generateUrl('route_name'));
+return $response;
+```
+
+For non-htmx fallback, check `$request->headers->has('HX-Request')` first — or just always return `HX-Redirect` for these routes since the page always uses htmx.
+
+### Modals (htmx partial into a slot)
+
+Pages that need a modal include `<div id="modal-slot"></div>` in the main content. Trigger buttons use `hx-get="..." hx-target="#modal-slot" hx-swap="innerHTML"`. The partial (`templates/<feature>/_block-form.html.twig`) renders a full backdrop + card. Closing is done by `closeBlockModal()` (defined in `assets/schedule.js`) which sets `innerHTML = ''` on the slot. The cancel button and the backdrop `onclick` both call it.
+
+### CSS component naming
+
+Follow the established prefix conventions:
+- App shell: `.app-shell__*`
+- Nav: `.nav-link`, `.nav-link--active`
+- Page header: `.page-header`, `.page-header__inner/kicker/title/subtitle/spacer`
+- Rail sections: `.rail-section__divider`, `.rail-section__heading`
+- Buttons: `.b-btn`, `.b-btn--primary/ghost/danger`
+- Wizard: `.wiz-*` (shared across all wizards)
+- Feature-specific: prefix with the feature name (`.sched-*`, `.proj-*`, `.projects-*`)
+- Empty states: `__empty` element with `__glyph`, `__title`, `__sub` children
+
+All button/input elements use `font-family: var(--mono)`. Body text uses `var(--sans)` (Inter, set on `body`).
+
+### Reading the design handoff
+
+Before building any page, read the corresponding `~/projects/beacon_design_handoff/<Page>.html` file. Check `screenshots/` for the reference PNG. Match pixel-for-pixel — colors, spacing, borders, and interaction states are all intentional.
+
+---
+
 ## When in doubt
 
 If a Symfony 7.4-specific pattern is ambiguous, fetch the version-pinned docs from `https://symfony.com/doc/7.4/<topic>.html` rather than guessing. **Do not use `/doc/current/`** — that points to Symfony 8, which we are not on. My (Claude's) Symfony knowledge is solid through ~2024; verify recent changes before producing patterns confidently.

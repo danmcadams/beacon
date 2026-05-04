@@ -15,7 +15,7 @@
     <nav class="app-shell__nav">
       <a href="{{ path('home') }}" class="nav-link{{ active_page == 'today' ? ' nav-link--active' : '' }}">today</a>
       <a href="{{ path('projects_index') }}" class="nav-link{{ active_page == 'projects' ? ' nav-link--active' : '' }}">projects</a>
-      <a href="#" class="nav-link{{ active_page == 'schedule' ? ' nav-link--active' : '' }}">schedule</a>
+      <a href="{{ path('schedule_index') }}" class="nav-link{{ active_page == 'schedule' ? ' nav-link--active' : '' }}">schedule</a>
     </nav>
 
     <span class="app-shell__spacer"></span>

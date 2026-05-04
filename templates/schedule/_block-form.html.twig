@@ -1,0 +1,63 @@
+{# htmx partial: block add/edit modal #}
+<div class="block-modal" onclick="if(event.target===this)closeBlockModal()">
+  <div class="block-modal__card">
+    <h2 class="block-modal__title">
+      {{ mode == 'add' ? 'Add schedule block' : 'Edit schedule block' }}
+    </h2>
+    <p class="block-modal__sub">
+      {% if mode == 'add' %}
+        will repeat every week on the chosen day
+      {% else %}
+        editing {{ days[defaults.day] }} {{ defaults.start }}–{{ defaults.end }}
+      {% endif %}
+    </p>
+
+    {% if errors is not empty %}
+      <p class="block-modal__error">{{ errors|first }}</p>
+    {% endif %}
+
+    <form method="post"
+          action="{{ mode == 'add' ? path('schedule_block_create') : path('schedule_block_update', { id: block.id }) }}"
+          hx-post="{{ mode == 'add' ? path('schedule_block_create') : path('schedule_block_update', { id: block.id }) }}"
+          hx-target="#modal-slot"
+          hx-swap="innerHTML">
+
+      <div class="block-modal__row">
+        <select name="day" class="wiz-input">
+          {% for num, label in days %}
+            <option value="{{ num }}"{{ defaults.day == num ? ' selected' : '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <input type="time" name="start" value="{{ defaults.start }}" class="wiz-input" required>
+        <input type="time" name="end"   value="{{ defaults.end }}"   class="wiz-input" required>
+      </div>
+
+      <input type="text" name="label" value="{{ defaults.label }}"
+             placeholder="Label — e.g. Focused work · #4"
+             class="wiz-input block-modal__label-input"
+             maxlength="100" required>
+
+      <select name="type" class="wiz-input block-modal__type-select">
+        {% for typeCase in types %}
+          <option value="{{ typeCase.value }}"{{ defaults.type == typeCase.value ? ' selected' : '' }}>
+            {{ typeCase.value|replace({'_': ' '}) }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <div class="block-modal__actions">
+        {% if mode == 'edit' %}
+          <button type="button" class="b-btn b-btn--danger"
+                  hx-post="{{ path('schedule_block_delete', { id: block.id }) }}"
+                  hx-target="#modal-slot"
+                  hx-swap="innerHTML">⊗ delete</button>
+        {% endif %}
+        <span style="flex:1"></span>
+        <button type="button" class="b-btn b-btn--ghost" onclick="closeBlockModal()">cancel</button>
+        <button type="submit" class="b-btn b-btn--primary">
+          {{ mode == 'add' ? '+ add' : '✓ save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

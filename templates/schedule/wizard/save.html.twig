@@ -1,0 +1,26 @@
+{% extends 'schedule/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<form method="post" id="save-form" action="{{ path('schedule_wizard_save') }}">
+  <div class="sched-wiz-save-info">
+    <p style="margin: 0 0 10px; font-size: var(--fs-13); color: var(--fg-2)">This will:</p>
+    <ul class="sched-wiz-save-list">
+      <li>delete all rows in <code class="sched-wiz-code">schedule_blocks</code></li>
+      <li>insert anchors × 5 weekdays</li>
+      <li>insert per-day overrides</li>
+    </ul>
+  </div>
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost"
+            form="save-form"
+            formaction="{{ path('schedule_wizard_cancel') }}"
+            formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('schedule_wizard_review') }}" class="b-btn">← back</a>
+    <button type="submit" class="b-btn b-btn--primary" form="save-form">✓ save schedule</button>
+  </div>
+</form>
+{% endblock %}

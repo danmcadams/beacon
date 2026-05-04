@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% set step_info = {
+  anchors:   { title: 'Anchor blocks',      subtitle: 'Mon–Fri',      description: 'Add the time blocks that repeat every weekday. Per-day overrides come next.' },
+  overrides: { title: 'Per-day overrides',  subtitle: 'optional',     description: 'Add blocks that only happen on specific weekdays — e.g., a Tuesday standup.' },
+  review:    { title: 'Review',             subtitle: 'full week',    description: 'Looks right? Continue to save.' },
+  save:      { title: 'Save',               subtitle: 'commit',       description: 'Click save to write the schedule. Existing rows will be replaced.' },
+} %}
+
+{% set step_routes = {
+  anchors:   'schedule_wizard_anchors',
+  overrides: 'schedule_wizard_overrides',
+  review:    'schedule_wizard_review',
+  save:      'schedule_wizard_save',
+} %}
+
+{% set current = step_info[step.name] %}
+
+{% block title %}Beacon · schedule wizard · {{ current.title|lower }}{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  <header class="app-shell__topbar">
+    <a href="{{ path('home') }}" class="app-shell__brand" title="beacon">
+      <span class="app-shell__brand-mark">B</span>
+      <span class="app-shell__brand-name">beacon</span>
+    </a>
+
+    <nav class="app-shell__nav">
+      <a href="{{ path('home') }}" class="nav-link">today</a>
+      <a href="{{ path('projects_index') }}" class="nav-link">projects</a>
+      <a href="{{ path('schedule_index') }}" class="nav-link nav-link--active">schedule</a>
+    </nav>
+
+    <span class="app-shell__spacer"></span>
+
+    <span class="app-shell__hint">
+      press <kbd class="kbd-chip">j</kbd> / <kbd class="kbd-chip">k</kbd> to navigate
+    </span>
+
+    <a href="#" class="app-shell__icon-btn" title="Settings">⚙</a>
+    <button type="button" class="app-shell__theme-indicator" title="Dark mode (MVP is dark-only)">☾ dark</button>
+  </header>
+
+  <div class="app-shell__content app-shell__content--with-aside">
+    <aside class="app-shell__aside">
+      <div class="wiz-rail__summary">
+        <span class="wiz-rail__kicker">schedule wizard</span>
+        <span class="wiz-rail__title">{{ step.total }} steps</span>
+        <span class="wiz-rail__sub">~3 minutes</span>
+      </div>
+
+      <hr class="rail-section__divider">
+      <h3 class="rail-section__heading">Note</h3>
+      <p class="sched-wiz-note">
+        Beacon allocates project hours into
+        <span class="sched-wiz-note__accent">work_session</span>
+        blocks only. Other types pass to the briefing as context.
+      </p>
+    </aside>
+
+    <main class="app-shell__main">
+      <nav class="wiz-breadcrumb">
+        <a href="{{ path('schedule_index') }}">schedule</a>
+        <span class="dimmest">/</span>
+        <span class="wiz-breadcrumb__current">wizard</span>
+      </nav>
+
+      <header class="page-header">
+        <div class="page-header__inner">
+          <span class="page-header__kicker">setup</span>
+          <h1 class="page-header__title">Schedule wizard</h1>
+          <span class="page-header__subtitle">define your weekly anchor blocks once</span>
+        </div>
+      </header>
+
+      <div class="wiz-grid">
+        <ol class="wiz-stepper">
+          {% for s in step.all %}
+            {% set info = step_info[s.name] %}
+            {% set state_cls = s.active ? 'wiz-stepper__btn--active' : (s.complete ? 'wiz-stepper__btn--done' : 'wiz-stepper__btn--upcoming') %}
+            <li class="wiz-stepper__item">
+              {% if s.complete %}
+                <a href="{{ path(step_routes[s.name]) }}" class="wiz-stepper__btn {{ state_cls }}">
+                  <span class="wiz-stepper__num">✓</span>
+                  <span class="wiz-stepper__labels">
+                    <span>{{ info.title }}</span>
+                    <span class="wiz-stepper__sub">{{ info.subtitle }}</span>
+                  </span>
+                </a>
+              {% else %}
+                <span class="wiz-stepper__btn {{ state_cls }}">
+                  <span class="wiz-stepper__num">{{ s.index }}</span>
+                  <span class="wiz-stepper__labels">
+                    <span>{{ info.title }}</span>
+                    <span class="wiz-stepper__sub">{{ info.subtitle }}</span>
+                  </span>
+                </span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+
+        <div>
+          <div class="wiz-card">
+            <div class="wiz-card__step">step {{ step.index }} of {{ step.total }}</div>
+            <h2 class="wiz-card__title">{{ current.title }}</h2>
+            <p class="wiz-card__desc">{{ current.description }}</p>
+            {% block step_body %}{% endblock %}
+          </div>
+
+          {% block step_actions %}{% endblock %}
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

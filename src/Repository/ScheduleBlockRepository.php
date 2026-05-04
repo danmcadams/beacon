@@ -29,4 +29,33 @@ final class ScheduleBlockRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return array<int, list<ScheduleBlock>>  Keys 1–5 (Mon–Fri), always present.
+     */
+    public function findAllGroupedByDay(): array
+    {
+        $blocks = $this->createQueryBuilder('s')
+            ->orderBy('s.dayOfWeek', 'ASC')
+            ->addOrderBy('s.startTime', 'ASC')
+            ->addOrderBy('s.sortOrder', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $grouped = [1 => [], 2 => [], 3 => [], 4 => [], 5 => []];
+        foreach ($blocks as $block) {
+            if (isset($grouped[$block->getDayOfWeek()])) {
+                $grouped[$block->getDayOfWeek()][] = $block;
+            }
+        }
+        return $grouped;
+    }
+
+    public function deleteAll(): void
+    {
+        $this->createQueryBuilder('s')
+            ->delete()
+            ->getQuery()
+            ->execute();
+    }
 }

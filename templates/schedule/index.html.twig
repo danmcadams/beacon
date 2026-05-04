@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · schedule{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'schedule' } %}
+
+  {% block aside %}
+    <div class="sched-rail__summary">
+      <span class="sched-rail__kicker">schedule</span>
+      <span class="sched-rail__title">weekly template</span>
+      <span class="sched-rail__sub">Mon–Fri · repeats every week</span>
+    </div>
+
+    {% if not is_empty %}
+      <hr class="rail-section__divider">
+      <h3 class="rail-section__heading">View</h3>
+      <div class="sched-rail__views">
+        <a href="{{ path('schedule_index', { view: 'grid' }) }}"
+           class="filter-tab{{ view == 'grid' ? ' filter-tab--active' : '' }}">weekly grid</a>
+        <a href="{{ path('schedule_index', { view: 'list' }) }}"
+           class="filter-tab{{ view == 'list' ? ' filter-tab--active' : '' }}">per-day list</a>
+      </div>
+    {% endif %}
+
+    <hr class="rail-section__divider">
+    <h3 class="rail-section__heading">Legend</h3>
+    <div class="sched-legend">
+      <div class="sched-legend__item"><span class="sched-legend__dot sched-legend__dot--work_session"></span> focused work</div>
+      <div class="sched-legend__item"><span class="sched-legend__dot sched-legend__dot--meeting"></span> meeting</div>
+      <div class="sched-legend__item"><span class="sched-legend__dot sched-legend__dot--break"></span> break</div>
+      <div class="sched-legend__item"><span class="sched-legend__dot sched-legend__dot--personal"></span> personal</div>
+      <div class="sched-legend__item"><span class="sched-legend__dot sched-legend__dot--other"></span> other</div>
+    </div>
+
+    <hr class="rail-section__divider">
+    <h3 class="rail-section__heading">Actions</h3>
+    <div class="sched-rail__actions">
+      <a href="{{ path('schedule_wizard_start') }}" class="b-btn sched-rail__wiz-btn">↻ re-run wizard</a>
+      <p class="sched-rail__wiz-warn">warning: overwrites current schedule.</p>
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <header class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">weekly anchors</span>
+        <h1 class="page-header__title">Schedule</h1>
+        <span class="page-header__subtitle">click a block to edit · use + add to create</span>
+      </div>
+      <span class="page-header__spacer"></span>
+      {% if not is_empty %}
+        <button class="b-btn b-btn--primary"
+                hx-get="{{ path('schedule_block_new') }}"
+                hx-target="#modal-slot"
+                hx-swap="innerHTML">+ add block</button>
+      {% endif %}
+    </header>
+
+    <div id="modal-slot"></div>
+
+    {% if is_empty %}
+      <div class="sched-empty">
+        <div class="sched-empty__glyph">∅</div>
+        <div class="sched-empty__title">No schedule yet</div>
+        <p class="sched-empty__sub">Define your weekly anchor blocks. Beacon allocates project hours into the work sessions you specify.</p>
+        <a href="{{ path('schedule_wizard_start') }}" class="b-btn b-btn--primary">→ run schedule wizard</a>
+      </div>
+
+    {% elseif view == 'list' %}
+      <div class="sched-day-list">
+        {% for day, label in days %}
+          <div class="sched-day-card">
+            <h3 class="sched-day-card__heading">{{ label }}</h3>
+            {% for bv in week[day] %}
+              {% set bt = bv.block.blockType.value %}
+              <button class="sched-day-block sched-day-block--{{ bt }}"
+                      hx-get="{{ path('schedule_block_edit', { id: bv.block.id }) }}"
+                      hx-target="#modal-slot"
+                      hx-swap="innerHTML">
+                <div class="sched-day-block__time">{{ bv.start_fmt }}–{{ bv.end_fmt }}</div>
+                <div class="sched-day-block__label">{{ bv.block.label }}</div>
+              </button>
+            {% else %}
+              <p class="sched-day-card__empty">—</p>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      {# Grid view #}
+      <div class="sched-grid">
+        {# Header row #}
+        <div class="sched-grid__header">
+          <div class="sched-grid__corner"></div>
+          {% for day, label in days %}
+            <div class="sched-grid__day-label">{{ label }}</div>
+          {% endfor %}
+        </div>
+        {# Body #}
+        <div class="sched-grid__body">
+          {# Time labels column #}
+          <div class="sched-grid__time-col" style="height: {{ grid_height }}px">
+            {% for hour in hours %}
+              <div class="sched-grid__hour-label" style="top: {{ (hour - 7) * hour_height }}px">
+                {{ '%02d'|format(hour) }}:00
+              </div>
+            {% endfor %}
+          </div>
+          {# Day columns #}
+          {% for day, label in days %}
+            <div class="sched-grid__day-col" style="height: {{ grid_height }}px"
+                 hx-get="{{ path('schedule_block_new', { day: day }) }}"
+                 hx-target="#modal-slot"
+                 hx-swap="innerHTML"
+                 hx-trigger="click[!event.target.closest('.sched-block')]">
+              {# Hour grid lines #}
+              {% for hour in hours %}
+                <div class="sched-grid__hour-line" style="top: {{ (hour - 7) * hour_height }}px; height: {{ hour_height }}px"></div>
+              {% endfor %}
+              {# Blocks #}
+              {% for bv in week[day] %}
+                {% set bt = bv.block.blockType.value %}
+                <button class="sched-block sched-block--{{ bt }}{{ bv.compact ? ' sched-block--compact' : '' }}"
+                        style="top: {{ bv.top + 1 }}px; height: {{ bv.height - 2 }}px"
+                        hx-get="{{ path('schedule_block_edit', { id: bv.block.id }) }}"
+                        hx-target="#modal-slot"
+                        hx-swap="innerHTML"
+                        hx-trigger="click[true]">
+                  {% if bv.compact %}
+                    <span class="sched-block__time">{{ bv.start_fmt }}</span>
+                    <span class="sched-block__label">{{ bv.block.label }}</span>
+                  {% else %}
+                    <div class="sched-block__time">{{ bv.start_fmt }}–{{ bv.end_fmt }}</div>
+                    <div class="sched-block__label">{{ bv.block.label }}</div>
+                  {% endif %}
+                </button>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}

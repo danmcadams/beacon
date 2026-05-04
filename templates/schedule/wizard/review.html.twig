@@ -1,0 +1,18 @@
+{% extends 'schedule/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<pre class="wiz-review">anchors    = {{ anchor_count }} (Mon–Fri)
+overrides  = {{ override_count }}
+work hours = {{ work_hours }}h/day</pre>
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <form method="post" action="{{ path('schedule_wizard_cancel') }}" style="display:contents">
+      <button type="submit" class="b-btn b-btn--ghost">cancel</button>
+    </form>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('schedule_wizard_overrides') }}" class="b-btn">← back</a>
+    <a href="{{ path('schedule_wizard_save') }}" class="b-btn b-btn--primary">next →</a>
+  </div>
+{% endblock %}

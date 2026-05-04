@@ -1,0 +1,69 @@
+{% extends 'schedule/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<form method="post" id="overrides-form" novalidate>
+
+  {% if errors is not empty %}
+    <p class="wiz-field__error" style="margin-bottom: 10px">{{ errors|first }}</p>
+  {% endif %}
+
+  <div class="sched-wiz-header sched-wiz-header--overrides">
+    <span>day</span><span>start</span><span>end</span><span>label</span><span>type</span><span></span>
+  </div>
+
+  <div id="overrides-rows">
+    {% for i, row in rows %}
+      <div class="sched-wiz-row sched-wiz-row--overrides">
+        <select name="rows[{{ i }}][day]" class="wiz-input">
+          {% for num, label in days %}
+            <option value="{{ num }}"{{ row.day == num ? ' selected' : '' }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <input type="time" name="rows[{{ i }}][start]" value="{{ row.start }}" class="wiz-input" required>
+        <input type="time" name="rows[{{ i }}][end]"   value="{{ row.end }}"   class="wiz-input" required>
+        <input type="text" name="rows[{{ i }}][label]" value="{{ row.label }}" class="wiz-input" maxlength="100" placeholder="Label">
+        <select name="rows[{{ i }}][type]" class="wiz-input">
+          {% for typeCase in types %}
+            <option value="{{ typeCase.value }}"{{ row.type == typeCase.value ? ' selected' : '' }}>{{ typeCase.value|replace({'_': ' '}) }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" class="b-btn b-btn--ghost sched-wiz-row__del" data-del-row>−</button>
+      </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" id="add-override-btn" class="b-btn" style="margin-top: 8px">+ add override</button>
+
+  <template id="override-row-tpl">
+    <div class="sched-wiz-row sched-wiz-row--overrides">
+      <select name="rows[__IDX__][day]" class="wiz-input">
+        {% for num, label in days %}
+          <option value="{{ num }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input type="time" name="rows[__IDX__][start]" value="09:00" class="wiz-input">
+      <input type="time" name="rows[__IDX__][end]"   value="10:00" class="wiz-input">
+      <input type="text" name="rows[__IDX__][label]" value=""      class="wiz-input" maxlength="100" placeholder="Label">
+      <select name="rows[__IDX__][type]" class="wiz-input">
+        {% for typeCase in types %}
+          <option value="{{ typeCase.value }}">{{ typeCase.value|replace({'_': ' '}) }}</option>
+        {% endfor %}
+      </select>
+      <button type="button" class="b-btn b-btn--ghost sched-wiz-row__del" data-del-row>−</button>
+    </div>
+  </template>
+
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost"
+            form="overrides-form"
+            formaction="{{ path('schedule_wizard_cancel') }}"
+            formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('schedule_wizard_anchors') }}" class="b-btn">← back</a>
+    <button type="submit" class="b-btn b-btn--primary" form="overrides-form">next →</button>
+  </div>
+</form>
+{% endblock %}
