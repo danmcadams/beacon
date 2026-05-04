@@ -532,6 +532,11 @@
   border-top: 1px solid var(--line);
   padding: 6px 14px 10px;
   background: var(--bg-3);
+  display: none;
+}
+
+.project-stack--show-tickets .project-card__tickets {
+  display: block;
 }
 
 .project-card__tickets-title {
