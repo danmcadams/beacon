@@ -533,7 +533,7 @@
   padding: 6px 14px 10px;
   background: var(--bg-3);
   display: grid;
-  grid-template-columns: min-content 1fr 60px;
+  grid-template-columns: min-content 1fr auto;
   column-gap: 10px;
 }
 
@@ -586,10 +586,8 @@
   white-space: nowrap;
 }
 
-.project-card__ticket-prio {
-  color: var(--fg-3);
-  text-align: right;
-  font-family: var(--mono);
+.project-card__ticket-status {
+  align-self: center;
 }
 
 /* ── Inline ticket key (in briefing markdown) ───────────────── */

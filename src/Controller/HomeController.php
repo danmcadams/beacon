@@ -120,6 +120,7 @@ final class HomeController extends AbstractController
                     'key' => $t->getTicketKey(),
                     'summary' => $t->getSummary(),
                     'priority' => $t->getPriority(),
+                    'status' => $t->getStatus(),
                 ],
                 \array_slice($tickets, 0, 5),
             ),
