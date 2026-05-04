@@ -1,0 +1,11 @@
+<span id="anthropic-test-result" style="display: inline-flex; align-items: center; gap: 8px;">
+  <button type="button" class="b-btn"
+    hx-post="{{ path('settings_anthropic_test') }}"
+    hx-target="#anthropic-test-result"
+    hx-swap="outerHTML">↻ test connection</button>
+  {% if ok %}
+    <span style="color: var(--ok); font-size: var(--fs-12);">✓ {{ message }}</span>
+  {% else %}
+    <span style="color: var(--warn); font-size: var(--fs-12);">⚠ {{ message }}</span>
+  {% endif %}
+</span>

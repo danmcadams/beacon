@@ -15,7 +15,8 @@ links       = {{ linkCount }} configured</pre>
 
 {% block step_actions %}
   <div class="wiz-actions">
-    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate>cancel</button>
+    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate
+            onclick="return confirm('Discard this new project?')">cancel</button>
     <span class="wiz-actions__spacer"></span>
     <a href="{{ path('project_wizard_links') }}" class="b-btn">← back</a>
     <button type="submit" class="b-btn b-btn--primary">✓ create project</button>

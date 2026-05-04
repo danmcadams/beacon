@@ -1,0 +1,217 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · settings{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'settings' } %}
+
+  {% block aside %}
+    <div class="settings-rail__header">
+      <span class="rail-block__kicker">settings</span>
+      <span class="settings-rail__title">connection &amp; ops</span>
+      <span class="settings-rail__sub">credentials live in .env.local</span>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Jump to</h3>
+    <div class="rail-section__body">
+      <div class="settings-rail__jumps">
+        <a href="#jira" class="settings-rail__jump">Jira connections</a>
+        <a href="#anthropic" class="settings-rail__jump">Anthropic API</a>
+        <a href="#cron" class="settings-rail__jump">Cron</a>
+        <a href="#tokens" class="settings-rail__jump">Token usage</a>
+      </div>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Status</h3>
+    <div class="rail-section__body">
+      <div class="settings-rail__status">
+        <div class="settings-rail__stat">
+          <span class="dimmer">anthropic</span>
+          <span class="{{ rail_status.anthropic_ok ? 'settings-rail__ok' : 'settings-rail__warn' }}">
+            {{ rail_status.anthropic_ok ? '✓ ok' : '⚠ check' }}
+          </span>
+        </div>
+        <div class="settings-rail__stat">
+          <span class="dimmer">cron</span>
+          <span class="{{ rail_status.cron_ok ? 'settings-rail__ok' : 'settings-rail__warn' }}">
+            {{ rail_status.cron_ok ? '✓ ok' : '⚠ check' }}
+          </span>
+        </div>
+        <div class="settings-rail__stat">
+          <span class="dimmer">jira ({{ rail_status.jira_count }} projects)</span>
+          {% if rail_status.jira_error_count == 0 %}
+            <span class="settings-rail__ok">✓ ok</span>
+          {% else %}
+            <span class="settings-rail__warn">{{ rail_status.jira_error_count }} error{{ rail_status.jira_error_count != 1 ? 's' : '' }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <div class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">ops</span>
+        <h1 class="page-header__title">Settings</h1>
+        <span class="page-header__subtitle">connection tests, model selection, token tracking</span>
+      </div>
+    </div>
+
+    {# ── Jira connections ── #}
+    <section id="jira" style="margin-top: 14px;">
+      <div class="settings-panel">
+        <h2 class="settings-panel__title">Jira connections</h2>
+        <p class="settings-panel__sub">last successful API call per project</p>
+        <div class="settings-table-wrap">
+          <table class="beacon settings-table">
+            <thead>
+              <tr>
+                <th>project</th>
+                <th style="width: 160px;">last ok</th>
+                <th>last error</th>
+                <th style="width: 80px; text-align: right;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in jira_rows %}
+                <tr>
+                  <td>
+                    {% if row.last_err %}
+                      <span style="color: var(--err);">⚠</span>
+                    {% else %}
+                      <span style="color: var(--ok);">✓</span>
+                    {% endif %}
+                    <span style="margin-left: 6px;">{{ row.name }}</span>
+                  </td>
+                  <td class="muted mono-time">{{ row.last_ok }}</td>
+                  <td style="color: {{ row.last_err ? 'var(--err)' : 'var(--fg-3)' }};">
+                    {{ row.last_err ?? '—' }}
+                  </td>
+                  <td style="text-align: right;">
+                    <span id="jira-test-result-{{ row.id }}">
+                      <button type="button" class="b-btn"
+                        hx-post="{{ path('settings_jira_test', { id: row.id }) }}"
+                        hx-target="#jira-test-result-{{ row.id }}"
+                        hx-swap="outerHTML"
+                        hx-indicator="#jira-test-result-{{ row.id }}">↻ test</button>
+                    </span>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="4" class="dimmer" style="text-align: center; padding: 20px;">
+                    No projects configured — <a href="{{ path('project_wizard_start') }}">add one</a>.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    {# ── Anthropic API ── #}
+    <section id="anthropic">
+      <div class="settings-panel">
+        <h2 class="settings-panel__title">Anthropic API</h2>
+        <p class="settings-panel__sub">briefing generation</p>
+
+        <div class="settings-field">
+          <span class="settings-field__label">Model</span>
+          <select class="settings-select" disabled>
+            {% for m in available_models %}
+              <option value="{{ m }}"{{ m == model ? ' selected' : '' }}>{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+          <span id="anthropic-test-result">
+            <button type="button" class="b-btn"
+              hx-post="{{ path('settings_anthropic_test') }}"
+              hx-target="#anthropic-test-result"
+              hx-swap="outerHTML">↻ test connection</button>
+          </span>
+          {% if not key_configured %}
+            <span style="color: var(--warn); font-size: var(--fs-12);">⚠ key not set</span>
+          {% endif %}
+        </div>
+
+        <p class="dimmer" style="margin-top: 8px; font-size: var(--fs-12);">
+          API key is read from <code class="settings-code">ANTHROPIC_API_KEY</code> in .env.local.
+        </p>
+      </div>
+    </section>
+
+    {# ── Cron ── #}
+    <section id="cron">
+      <div class="settings-panel">
+        <h2 class="settings-panel__title">Cron</h2>
+        <p class="settings-panel__sub">briefing generation runs Mon–Fri at 5:00 AM</p>
+
+        <dl class="settings-dl">
+          <dt class="dimmer">schedule</dt>
+          <dd><code class="settings-code">{{ cron.schedule }}</code></dd>
+          <dt class="dimmer">last run</dt>
+          <dd>{{ cron.last_run }}</dd>
+          <dt class="dimmer">last error</dt>
+          <dd class="settings-dl__err" style="color: {{ cron.last_error ? 'var(--err)' : 'var(--fg-3)' }};">
+            {{ cron.last_error ?? '— none —' }}
+          </dd>
+        </dl>
+
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+          <span class="b-btn b-btn--ghost" style="cursor: default; opacity: 0.5;">↻ run now</span>
+          <span class="dimmer" style="font-size: var(--fs-12);">use <code class="settings-code">bin/console app:briefing:generate</code></span>
+        </div>
+      </div>
+    </section>
+
+    {# ── Token usage ── #}
+    <section id="tokens">
+      <div class="settings-panel">
+        <h2 class="settings-panel__title">Token usage</h2>
+        <p class="settings-panel__sub">last {{ tokens.window_days }} days</p>
+
+        <div class="settings-token-stats">
+          <div class="settings-stat2">
+            <span class="settings-stat2__label">input</span>
+            <span class="settings-stat2__value">{{ tokens.input|number_format }}</span>
+          </div>
+          <div class="settings-stat2">
+            <span class="settings-stat2__label">output</span>
+            <span class="settings-stat2__value">{{ tokens.output|number_format }}</span>
+          </div>
+          <div class="settings-stat2">
+            <span class="settings-stat2__label">total</span>
+            <span class="settings-stat2__value">{{ (tokens.input + tokens.output)|number_format }}</span>
+          </div>
+          <div class="settings-stat2">
+            <span class="settings-stat2__label">est. cost</span>
+            <span class="settings-stat2__value">${{ tokens.cost_usd|number_format(2) }}</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 600 40" width="100%" height="40"
+          style="display: block; margin-top: 14px;"
+          preserveAspectRatio="none">
+          <polyline
+            points="{{ tokens.sparkline_pts }}"
+            fill="none"
+            stroke="var(--accent)"
+            stroke-width="1.5" />
+        </svg>
+
+        <p class="dimmer" style="margin-top: 8px; font-size: var(--fs-12);">
+          rough cost estimate, opus pricing — actual usage in your Anthropic console.
+        </p>
+      </div>
+    </section>
+
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}

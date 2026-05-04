@@ -13,6 +13,7 @@ use App\Repository\BriefingRepository;
 use App\Repository\JiraTicketRepository;
 use App\Repository\ProjectRepository;
 use App\Service\JiraConnectionTester;
+use App\Service\JiraUrlParser;
 use App\Twig\MarkdownExtension;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +29,7 @@ final class ProjectController extends AbstractController
         private readonly BriefingRepository $briefings,
         private readonly MarkdownExtension $markdown,
         private readonly JiraConnectionTester $jiraTester,
+        private readonly JiraUrlParser $jiraUrlParser,
         private readonly EntityManagerInterface $em,
     ) {
     }
@@ -158,11 +160,14 @@ final class ProjectController extends AbstractController
             $description = trim((string) $request->request->get('description', ''));
             $color = trim((string) $request->request->get('color', '#cba6f7'));
             $statusRaw = (string) $request->request->get('status', 'active');
-            $jiraBaseUrl = trim((string) $request->request->get('jira_base_url', ''));
-            $jiraBoardId = trim((string) $request->request->get('jira_board_id', ''));
+            $jiraUrl = trim((string) $request->request->get('jira_url', ''));
             $jiraJql = trim((string) $request->request->get('jira_jql_filter', ''));
             $hoursRaw = (string) $request->request->get('daily_hours_target', '0');
             $hours = is_numeric($hoursRaw) ? (float) $hoursRaw : -1.0;
+
+            $parsed = $this->jiraUrlParser->parse($jiraUrl);
+            $jiraBaseUrl = $parsed['base_url'];
+            $jiraBoardId = $parsed['project_key'] ?? '';
 
             $errors = [];
             if ($name === '') {
@@ -177,11 +182,10 @@ final class ProjectController extends AbstractController
             if ($status === null) {
                 $errors['status'] = 'Invalid status.';
             }
-            if ($jiraBaseUrl === '') {
-                $errors['jira_base_url'] = 'Jira base URL is required.';
-            }
-            if ($jiraBoardId === '') {
-                $errors['jira_board_id'] = 'Board ID is required.';
+            if ($jiraUrl === '') {
+                $errors['jira_url'] = 'Jira URL is required.';
+            } elseif ($jiraBaseUrl === '' || $jiraBoardId === '') {
+                $errors['jira_url'] = 'Could not parse a project key from that URL — paste a board, backlog, or project URL.';
             }
             if ($hours < 0 || $hours > 24) {
                 $errors['daily_hours_target'] = 'Daily target must be between 0 and 24.';
@@ -209,8 +213,9 @@ final class ProjectController extends AbstractController
                     'description' => $description,
                     'color' => $color,
                     'status' => $statusRaw,
-                    'jira_base_url' => $jiraBaseUrl,
-                    'jira_board_id' => $jiraBoardId,
+                    'jira_url' => $jiraUrl,
+                    'jira_parsed_host' => $jiraBaseUrl,
+                    'jira_parsed_key' => $jiraBoardId,
                     'jira_jql_filter' => $jiraJql,
                     'daily_hours_target' => $hours,
                 ],
@@ -219,6 +224,8 @@ final class ProjectController extends AbstractController
                 'swatch_colors' => $swatchColors,
             ]);
         }
+
+        $reconstructedUrl = sprintf('%s/projects/%s', $project->getJiraBaseUrl(), $project->getJiraBoardId());
 
         return $this->render('projects/edit.html.twig', [
             'project' => [
@@ -231,8 +238,9 @@ final class ProjectController extends AbstractController
                 'description' => $project->getDescription() ?? '',
                 'color' => $project->getColor(),
                 'status' => $project->getStatus()->value,
-                'jira_base_url' => $project->getJiraBaseUrl(),
-                'jira_board_id' => $project->getJiraBoardId(),
+                'jira_url' => $reconstructedUrl,
+                'jira_parsed_host' => $project->getJiraBaseUrl(),
+                'jira_parsed_key' => $project->getJiraBoardId(),
                 'jira_jql_filter' => $project->getJiraJqlFilter() ?? '',
                 'daily_hours_target' => $project->getDailyHoursTarget(),
             ],
@@ -245,13 +253,14 @@ final class ProjectController extends AbstractController
     #[Route('/projects/{id}/edit/jira-test', name: 'project_edit_jira_test', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function editJiraTest(Project $project, Request $request): Response
     {
-        $baseUrl = trim((string) $request->request->get('jira_base_url', ''));
-        $boardId = trim((string) $request->request->get('jira_board_id', ''));
+        $jiraUrl = trim((string) $request->request->get('jira_url', ''));
         $jql = trim((string) $request->request->get('jira_jql_filter', ''));
 
+        $parsed = $this->jiraUrlParser->parse($jiraUrl);
+
         $result = $this->jiraTester->test(
-            $baseUrl,
-            $boardId,
+            $parsed['base_url'],
+            $parsed['project_key'] ?? '',
             $jql !== '' ? $jql : null,
         );
 

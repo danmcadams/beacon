@@ -35,4 +35,15 @@ final class JiraTicketRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['project' => $project, 'ticketKey' => $ticketKey]);
     }
+
+    public function findMostRecentForProject(Project $project): ?JiraTicket
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.project = :project')
+            ->setParameter('project', $project)
+            ->orderBy('t.fetchedAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

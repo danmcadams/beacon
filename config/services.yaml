@@ -31,6 +31,11 @@ services:
         arguments:
             $model: '%env(ANTHROPIC_MODEL)%'
 
+    App\Controller\SettingsController:
+        arguments:
+            $anthropicApiKey: '%env(ANTHROPIC_API_KEY)%'
+            $anthropicModel: '%env(ANTHROPIC_MODEL)%'
+
     App\Service\JiraClient:
         arguments:
             $email: '%env(JIRA_EMAIL)%'

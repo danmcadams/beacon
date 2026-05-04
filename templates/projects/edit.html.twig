@@ -93,18 +93,14 @@
         <h3 class="proj-edit__section-heading">Jira</h3>
 
         <label class="wiz-field">
-          <span class="wiz-field__label">Base URL</span>
-          <input class="wiz-input" type="url" name="jira_base_url" value="{{ form.jira_base_url }}" placeholder="https://yourorg.atlassian.net">
-          {% if errors.jira_base_url is defined %}
-            <span class="wiz-field__error">{{ errors.jira_base_url }}</span>
-          {% endif %}
-        </label>
-
-        <label class="wiz-field">
-          <span class="wiz-field__label">Board ID</span>
-          <input class="wiz-input proj-edit__input--board-id" type="text" name="jira_board_id" value="{{ form.jira_board_id }}" placeholder="LR">
-          {% if errors.jira_board_id is defined %}
-            <span class="wiz-field__error">{{ errors.jira_board_id }}</span>
+          <span class="wiz-field__label">Jira URL</span>
+          <input class="wiz-input" type="text" name="jira_url" value="{{ form.jira_url }}"
+                 placeholder="https://yourorg.atlassian.net/jira/software/c/projects/KEY/boards/1">
+          <span class="wiz-field__hint">Paste any link from your project — board, backlog, ticket, anything. We'll pull the host and project key out of it.</span>
+          {% if errors.jira_url is defined %}
+            <span class="wiz-field__error">{{ errors.jira_url }}</span>
+          {% elseif form.jira_parsed_host is not empty and form.jira_parsed_key is not empty %}
+            <span class="wiz-field__hint">→ <span class="mono">{{ form.jira_parsed_host }}</span> · <span class="mono">{{ form.jira_parsed_key }}</span></span>
           {% endif %}
         </label>
 
