@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · yesterday{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'today' } %}
+
+  {% block aside %}
+    <div class="rail-block">
+      <span class="rail-block__kicker">yesterday</span>
+      <span class="rail-block__day">{{ date.day_label }}</span>
+      <span class="rail-block__date">{{ date.date_label }}</span>
+    </div>
+
+    <div class="yesterday-badge">
+      <span class="yesterday-badge__label">READ-ONLY</span>
+      <div class="yesterday-badge__sub">archived briefing snapshot</div>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Allocation</h3>
+    <div class="rail-section__body">
+      <div class="allocation__bar">
+        {% for p in projects %}
+          <span class="allocation__seg" style="flex: {{ p.hours }}; background: {{ p.color }};" title="{{ p.name }} · {{ p.hours }}h"></span>
+        {% endfor %}
+      </div>
+      {% for p in projects %}
+        <div class="allocation__row">
+          <span class="allocation__swatch" style="background: {{ p.color }};"></span>
+          <span class="allocation__name">{{ p.name }}</span>
+          <span class="allocation__hours">{{ p.hours|number_format(1) }}h</span>
+        </div>
+      {% endfor %}
+      <div class="allocation__total">
+        <span class="allocation__total-label">total</span>
+        <span class="allocation__total-value">{{ total_hours|number_format(1) }}h</span>
+      </div>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Briefing</h3>
+    <div class="rail-section__body briefing-meta">
+      <div class="briefing-meta__row">generated <span class="briefing-meta__strong">{{ briefing.generated_at_long }}</span></div>
+      <div class="briefing-meta__row briefing-meta__dim">{{ briefing.model }}</div>
+      <div class="briefing-meta__actions">
+        <a href="{{ path('home') }}" class="btn btn--link">→ today</a>
+      </div>
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <header class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">archived briefing</span>
+        <h1 class="page-header__title">{{ date.full_label }}</h1>
+        <span class="page-header__subtitle">{{ projects|length }} projects · read-only snapshot</span>
+      </div>
+      <span class="page-header__spacer"></span>
+      <a href="{{ path('home') }}" class="briefing-meta__dim" style="font-size: var(--fs-12)">→ back to today</a>
+    </header>
+
+    {% if projects is empty %}
+      <div class="sched-empty" style="margin-top: 40px">
+        <div class="sched-empty__glyph">∅</div>
+        <div class="sched-empty__title">No briefings for yesterday</div>
+        <p class="sched-empty__sub">Briefings are generated Mon–Fri at 5am. Nothing was stored for this date.</p>
+      </div>
+    {% else %}
+      <div class="project-stack">
+        {% for project in projects %}
+          {% include '_partials/_project-card.html.twig' with { project: project } only %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="yesterday-footer">
+      briefing history older than yesterday is not retained · MVP scope
+    </div>
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}

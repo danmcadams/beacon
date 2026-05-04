@@ -69,7 +69,7 @@
       <div class="briefing-meta__row briefing-meta__dim">{{ briefing.input_tokens }} in / {{ briefing.output_tokens }} out</div>
       <div class="briefing-meta__actions">
         <button type="button" class="btn btn--primary">↻ regenerate</button>
-        <a href="#" class="btn btn--link">← yesterday</a>
+        <a href="{{ path('yesterday') }}" class="btn btn--link">← yesterday</a>
       </div>
     </div>
   {% endblock %}

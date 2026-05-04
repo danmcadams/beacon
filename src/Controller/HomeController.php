@@ -27,6 +27,34 @@ final class HomeController extends AbstractController
     ) {
     }
 
+    #[Route('/yesterday', name: 'yesterday', methods: ['GET'])]
+    public function yesterday(): Response
+    {
+        $now       = new \DateTimeImmutable('now');
+        $yesterday = $now->modify('-1 day')->setTime(0, 0);
+
+        $projects           = $this->projects->findActiveOrdered();
+        $yesterdayBriefings = $this->indexBriefingsByProject($this->briefings->findForDate($yesterday));
+
+        $projectViews = array_map(
+            fn (Project $p) => $this->buildProjectView($p, $yesterdayBriefings[$p->getId()] ?? null),
+            $projects,
+        );
+
+        $totalHours = array_sum(array_map(fn (array $v) => $v['hours'], $projectViews));
+
+        return $this->render('home/yesterday.html.twig', [
+            'projects'    => $projectViews,
+            'total_hours' => $totalHours,
+            'date'        => [
+                'day_label'  => $yesterday->format('l'),
+                'date_label' => $yesterday->format('D M j'),
+                'full_label' => $yesterday->format('l, M j'),
+            ],
+            'briefing' => $this->buildBriefingMeta($yesterdayBriefings),
+        ]);
+    }
+
     #[Route('/', name: 'home', methods: ['GET'])]
     public function index(): Response
     {
