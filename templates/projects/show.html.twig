@@ -84,7 +84,9 @@
             {% for ticket in tickets %}
               <tr>
                 <td>
-                  <span class="proj-tickets__key" style="color: {{ project.color }};">{{ ticket.key }}</span>
+                  <a class="proj-tickets__key" style="color: {{ project.color }};"
+                     href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
+                     target="_blank" rel="noopener">{{ ticket.key }}</a>
                 </td>
                 <td>{{ ticket.summary }}</td>
                 <td>

@@ -133,6 +133,7 @@ final class ProjectController extends AbstractController
                 'color' => $project->getColor(),
                 'status' => $project->getStatus()->value,
                 'hours' => $project->getDailyHoursTarget(),
+                'jira_base_url' => $project->getJiraBaseUrl(),
             ],
             'briefing_html' => $briefingHtml,
             'briefing_has_content' => $briefing?->getStatus() === BriefingStatus::Success,

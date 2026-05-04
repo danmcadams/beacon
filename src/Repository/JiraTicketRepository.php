@@ -22,15 +22,28 @@ final class JiraTicketRepository extends ServiceEntityRepository
     /** @return list<JiraTicket> */
     public function findForProject(Project $project): array
     {
-        return $this->createQueryBuilder('t')
-            ->addSelect("CASE WHEN t.statusCategory = 'In Progress' THEN 0 ELSE 1 END AS HIDDEN status_sort")
+        $tickets = $this->createQueryBuilder('t')
             ->where('t.project = :project')
             ->setParameter('project', $project)
-            ->orderBy('status_sort', 'ASC')
-            ->addOrderBy('t.priority', 'ASC')
+            ->orderBy('t.priority', 'ASC')
             ->addOrderBy('t.ticketKey', 'ASC')
             ->getQuery()
             ->getResult();
+
+        usort($tickets, static function (JiraTicket $a, JiraTicket $b): int {
+            $score = static function (JiraTicket $t): int {
+                if ($t->getStatus() === 'In Progress') {
+                    return 0;
+                }
+                if ($t->getStatusCategory() === 'In Progress') {
+                    return 1;
+                }
+                return 2;
+            };
+            return $score($a) <=> $score($b);
+        });
+
+        return $tickets;
     }
 
     public function findOneByProjectAndKey(Project $project, string $ticketKey): ?JiraTicket

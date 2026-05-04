@@ -110,6 +110,7 @@ final class HomeController extends AbstractController
             'color' => $p->getColor(),
             'hours' => $p->getDailyHoursTarget(),
             'ticket_count' => count($tickets),
+            'jira_base_url' => $p->getJiraBaseUrl(),
             'briefing_status' => $briefing?->getStatus()->value ?? 'pending',
             'briefing_html' => $briefing
                 ? $this->markdown->markdown($briefing->getContentMarkdown())

@@ -32,7 +32,9 @@
       <div class="project-card__tickets-title">Tickets · open</div>
       {% for ticket in project.tickets %}
         <div class="project-card__ticket-row">
-          <span class="project-card__ticket-key" style="color: {{ project.color }};">{{ ticket.key }}</span>
+          <a class="project-card__ticket-key" style="color: {{ project.color }};"
+             href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
+             target="_blank" rel="noopener">{{ ticket.key }}</a>
           <span class="project-card__ticket-summary">{{ ticket.summary }}</span>
           <span class="project-card__ticket-prio">{{ ticket.priority }}</span>
         </div>
