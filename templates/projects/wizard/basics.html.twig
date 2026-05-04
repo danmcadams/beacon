@@ -6,7 +6,7 @@
 <form method="post" novalidate>
   <label class="wiz-field">
     <span class="wiz-field__label">Name</span>
-    <input class="wiz-input" type="text" name="name" maxlength="100" required value="{{ data.name }}" placeholder="LicenseRegistry" autofocus>
+    <input class="wiz-input" type="text" name="name" maxlength="100" required value="{{ data.name }}" placeholder="Project name" autofocus>
     {% if errors.name is defined %}
       <span class="wiz-field__error">{{ errors.name }}</span>
     {% else %}

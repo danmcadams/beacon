@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Entity\QuickLink;
 use App\Service\JiraConnectionTester;
+use App\Service\JiraTicketRefresher;
 use App\Service\JiraUrlParser;
 use App\Wizard\ProjectWizardState;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +24,7 @@ final class ProjectWizardController extends AbstractController
     public function __construct(
         private readonly ProjectWizardState $state,
         private readonly JiraConnectionTester $jiraTester,
+        private readonly JiraTicketRefresher $jiraRefresher,
         private readonly JiraUrlParser $jiraUrls,
         private readonly EntityManagerInterface $em,
     ) {
@@ -228,6 +230,12 @@ final class ProjectWizardController extends AbstractController
             $this->em->persist($project);
             $this->em->flush();
             $this->state->clear();
+
+            try {
+                $this->jiraRefresher->refresh($project);
+            } catch (\Throwable) {
+                // non-fatal — tickets can be refreshed manually
+            }
 
             $this->addFlash('success', sprintf('Project "%s" created.', $project->getName()));
 

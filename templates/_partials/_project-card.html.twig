@@ -28,24 +28,6 @@
   </div>
 
   {% if project.tickets is defined and project.tickets|length > 0 %}
-    <div class="project-card__tickets">
-      <div class="project-card__tickets-title">
-        Open Jira Tickets
-        {% if project.ticket_count > 5 %}
-          <a href="{{ path('project_detail', { id: project.id }) }}" class="project-card__tickets-more">
-            +{{ project.ticket_count - 5 }} more
-          </a>
-        {% endif %}
-      </div>
-      {% for ticket in project.tickets %}
-        <div class="project-card__ticket-row">
-          <a class="project-card__ticket-key" style="color: {{ project.color }};"
-             href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
-             target="_blank" rel="noopener">{{ ticket.key }}</a>
-          <span class="project-card__ticket-summary">{{ ticket.summary }}</span>
-          <span class="project-card__ticket-status pill {% if ticket.status == 'In Progress' %}pill--in-progress{% elseif ticket.status == 'Blocked' %}pill--blocked{% else %}pill--neutral{% endif %}">{{ ticket.status }}</span>
-        </div>
-      {% endfor %}
-    </div>
+    {{ include('_partials/_card-tickets.html.twig') }}
   {% endif %}
 </article>

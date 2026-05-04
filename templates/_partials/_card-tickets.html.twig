@@ -1,0 +1,20 @@
+<div class="project-card__tickets" id="card-tickets-{{ project.id }}">
+  <div class="project-card__tickets-title">
+    Open Jira Tickets
+    <span class="project-card__tickets-title-spacer"></span>
+    {% if project.ticket_count > 5 %}
+      <a href="{{ path('project_detail', { id: project.id }) }}" class="project-card__tickets-more">
+        +{{ project.ticket_count - 5 }} more
+      </a>
+    {% endif %}
+  </div>
+  {% for ticket in project.tickets %}
+    <div class="project-card__ticket-row">
+      <a class="project-card__ticket-key" style="color: {{ project.color }};"
+         href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
+         target="_blank" rel="noopener">{{ ticket.key }}</a>
+      <span class="project-card__ticket-summary">{{ ticket.summary }}</span>
+      <span class="project-card__ticket-status {% if ticket.status == 'In Progress' %}ticket-status--active{% elseif ticket.status == 'Blocked' %}ticket-status--blocked{% else %}ticket-status--neutral{% endif %}">{{ ticket.status }}</span>
+    </div>
+  {% endfor %}
+</div>

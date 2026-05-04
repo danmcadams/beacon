@@ -153,6 +153,30 @@ final class ProjectController extends AbstractController
         ]);
     }
 
+    #[Route('/projects/{id}/refresh-tickets-card', name: 'project_refresh_tickets_card', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function refreshTicketsCard(Project $project): Response
+    {
+        $this->jiraRefresher->refresh($project);
+
+        $now = new \DateTimeImmutable('now');
+        $tickets = $this->tickets->findForProject($project);
+
+        return $this->render('_partials/_card-tickets.html.twig', [
+            'project' => [
+                'id' => $project->getId(),
+                'color' => $project->getColor(),
+                'jira_base_url' => $project->getJiraBaseUrl(),
+                'ticket_count' => count($tickets),
+            ],
+            'tickets' => array_map(fn (JiraTicket $t) => [
+                'key' => $t->getTicketKey(),
+                'summary' => $t->getSummary(),
+                'status' => $t->getStatus(),
+                'priority' => $t->getPriority(),
+            ], \array_slice($tickets, 0, 5)),
+        ]);
+    }
+
     #[Route('/projects/{id}/refresh-tickets', name: 'project_refresh_tickets', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function refreshTickets(Project $project): Response
     {

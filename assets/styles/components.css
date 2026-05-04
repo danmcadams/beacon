@@ -553,6 +553,7 @@
   align-items: center;
   gap: 8px;
 }
+.project-card__tickets-title-spacer { flex: 1; }
 .project-card__tickets-more {
   font-size: var(--fs-12);
   color: var(--fg-3);
@@ -561,6 +562,17 @@
   letter-spacing: 0;
 }
 .project-card__tickets-more:hover { color: var(--accent); }
+.project-card__tickets-refresh {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fg-4);
+  font-family: var(--mono);
+  font-size: var(--fs-12);
+  padding: 0;
+  line-height: 1;
+}
+.project-card__tickets-refresh:hover { color: var(--accent); }
 
 .project-card__ticket-row {
   display: contents;
@@ -588,7 +600,13 @@
 
 .project-card__ticket-status {
   align-self: center;
+  font-family: var(--mono);
+  font-size: var(--fs-12);
+  white-space: nowrap;
 }
+.ticket-status--active  { color: var(--ok); }
+.ticket-status--blocked { color: var(--err); }
+.ticket-status--neutral { color: var(--fg-3); }
 
 /* ── Inline ticket key (in briefing markdown) ───────────────── */
 
