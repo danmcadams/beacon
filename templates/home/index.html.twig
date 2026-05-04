@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · today{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'today' } %}
+
+  {% block aside %}
+    <div class="rail-block">
+      <span class="rail-block__kicker">today</span>
+      <span class="rail-block__day">{{ now.day_label }}</span>
+      <span class="rail-block__date">{{ now.date_label }} · {{ now.time_label }}</span>
+    </div>
+
+    <div class="now-block">
+      {% if now.in_block %}
+        <span class="now-block__label">NOW · {{ now.in_block.start }}–{{ now.in_block.end }}</span>
+        <div class="now-block__title">{{ now.in_block.label }}</div>
+      {% elseif now.up_next %}
+        <span class="now-block__label">NEXT</span>
+        <div><span class="now-block__next">{{ now.up_next.label }}</span> <span class="briefing-meta__dim">at {{ now.up_next.start }}</span></div>
+      {% else %}
+        <span class="now-block__label">NEXT</span>
+        <div class="briefing-meta__dim">day complete</div>
+      {% endif %}
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Schedule</h3>
+    <div class="rail-section__body">
+      <div class="schedule-list">
+        {% for b in schedule %}
+          {% set is_current = b.is_current|default(false) %}
+          {% set is_past = b.is_past|default(false) %}
+          <div class="schedule-list__row{{ is_current ? ' schedule-list__row--current' : '' }}{{ is_past ? ' schedule-list__row--past' : '' }}">
+            <span class="schedule-list__time">{{ b.start }}</span>
+            <span class="schedule-list__label">{{ b.label }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Allocation</h3>
+    <div class="rail-section__body">
+      <div class="allocation__bar">
+        {% for p in projects %}
+          <span class="allocation__seg" style="flex: {{ p.hours }}; background: {{ p.color }};" title="{{ p.name }} · {{ p.hours }}h"></span>
+        {% endfor %}
+      </div>
+      {% for p in projects %}
+        <div class="allocation__row">
+          <span class="allocation__swatch" style="background: {{ p.color }};"></span>
+          <span class="allocation__name">{{ p.name }}</span>
+          <span class="allocation__hours">{{ p.hours|number_format(1) }}h</span>
+        </div>
+      {% endfor %}
+      <div class="allocation__total">
+        <span class="allocation__total-label">total</span>
+        <span class="allocation__total-value">{{ total_hours|number_format(1) }}h</span>
+      </div>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Briefing</h3>
+    <div class="rail-section__body briefing-meta">
+      <div class="briefing-meta__row">generated <span class="briefing-meta__strong">{{ briefing.generated_at_long }}</span></div>
+      <div class="briefing-meta__row briefing-meta__dim">{{ briefing.model }}</div>
+      <div class="briefing-meta__row briefing-meta__dim">{{ briefing.input_tokens }} in / {{ briefing.output_tokens }} out</div>
+      <div class="briefing-meta__actions">
+        <button type="button" class="btn btn--primary">↻ regenerate</button>
+        <a href="#" class="btn btn--link">← yesterday</a>
+      </div>
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <header class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">today</span>
+        <h1 class="page-header__title">Briefings</h1>
+        <span class="page-header__subtitle">{{ projects|length }} projects · {{ total_hours|number_format(1) }}h allocated</span>
+      </div>
+      <span class="page-header__spacer"></span>
+      <button type="button" class="btn btn--ghost">jira ticket preview</button>
+    </header>
+
+    <div class="project-stack">
+      {% for project in projects %}
+        {% include '_partials/_project-card.html.twig' with { project: project } only %}
+      {% endfor %}
+    </div>
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}

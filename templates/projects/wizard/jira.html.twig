@@ -1,0 +1,45 @@
+{% extends 'projects/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<form method="post" novalidate>
+  <label class="wiz-field">
+    <span class="wiz-field__label">Jira URL</span>
+    <input class="wiz-input" type="url" name="jira_url" required placeholder="https://yourorg.atlassian.net/jira/software/c/projects/BEAC/boards/1" value="{{ data.jira_url }}" autofocus>
+    {% if errors.jira_url is defined %}
+      <span class="wiz-field__error">{{ errors.jira_url }}</span>
+    {% else %}
+      <span class="wiz-field__hint">
+        Paste any link from your project — board, backlog, ticket, anything. We'll pull the host and project key out of it.
+        {% if data.base_url and data.board_id %}
+          <br><span class="dimmer">parsed:</span> <code>{{ data.base_url }}</code> · project key <code>{{ data.board_id }}</code>
+        {% endif %}
+      </span>
+    {% endif %}
+  </label>
+
+  <label class="wiz-field">
+    <span class="wiz-field__label">JQL filter (optional)</span>
+    <textarea class="wiz-textarea" name="jql_filter" placeholder="">{{ data.jql_filter }}</textarea>
+    <span class="wiz-field__hint">Default: assignee = currentUser() AND statusCategory != Done</span>
+  </label>
+
+  <div class="wiz-test">
+    <button type="button"
+            class="b-btn"
+            hx-post="{{ path('project_wizard_jira_test') }}"
+            hx-include="closest form"
+            hx-target="#jira-test-result"
+            hx-swap="outerHTML">↻ test connection</button>
+    {% include 'projects/wizard/_jira-test-result.html.twig' with { result: test_result } %}
+  </div>
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('project_wizard_basics') }}" class="b-btn">← back</a>
+    <button type="submit" class="b-btn b-btn--primary">next →</button>
+  </div>
+</form>
+{% endblock %}

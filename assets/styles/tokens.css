@@ -1,0 +1,148 @@
+/* Beacon — design tokens */
+
+:root {
+  --mono: 'JetBrains Mono', 'Berkeley Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* base scale (mono-tight) */
+  --fs-12: 11px;
+  --fs-13: 12px;
+  --fs-14: 13px;
+  --fs-15: 14px;
+  --fs-17: 16px;
+  --fs-20: 19px;
+  --fs-24: 22px;
+  --fs-32: 28px;
+
+  --lh-tight: 1.35;
+  --lh-body: 1.55;
+  --lh-loose: 1.7;
+
+  --r-2: 2px;
+  --r-3: 3px;
+  --r-4: 4px;
+  --r-6: 6px;
+  --r-8: 8px;
+}
+
+[data-theme="dark"] {
+  /* catppuccin mocha-ish */
+  --bg:        #1e1e2e;
+  --bg-2:      #181825;       /* deeper / panel base */
+  --bg-3:      #11111b;       /* deepest, code wells */
+  --tint:      #2a2a3e;       /* hover/selected */
+  --line:      #313244;
+  --line-2:    #45475a;
+  --fg:        #cdd6f4;
+  --fg-2:      #a6adc8;       /* muted */
+  --fg-3:      #6c7086;       /* further muted, captions */
+  --fg-4:      #494d64;       /* dimmest, gutter glyphs */
+
+  --accent:    #cba6f7;       /* mauve */
+  --accent-2:  #f5c2e7;       /* pink, hover */
+  --ok:        #a6e3a1;
+  --warn:      #f9e2af;
+  --err:       #f38ba8;
+  --info:      #89b4fa;
+
+  --shadow-card: 0 0 0 1px var(--line) inset;
+}
+
+[data-theme="light"] {
+  --bg:        #fafafa;
+  --bg-2:      #ffffff;
+  --bg-3:      #f3f0f7;
+  --tint:      #ede9fe;
+  --line:      #e2d9f3;
+  --line-2:    #d0d7de;
+  --fg:        #1f1f2c;
+  --fg-2:      #57606a;
+  --fg-3:      #8b8fa3;
+  --fg-4:      #b0b3c4;
+
+  --accent:    #7c3aed;
+  --accent-2:  #6d28d9;
+  --ok:        #2d8a4e;
+  --warn:      #b45309;
+  --err:       #be123c;
+  --info:      #2563eb;
+
+  --shadow-card: 0 0 0 1px var(--line) inset;
+}
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: var(--fs-14);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* mono reserved for data: ticket keys, timestamps, hours, code, kbd */
+code, kbd, .mono, .ticket-key, .timestamp, .hours, time { font-family: var(--mono); }
+
+* { box-sizing: border-box; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--accent); }
+
+::selection { background: var(--accent); color: var(--bg); }
+
+/* utility-ish */
+.muted   { color: var(--fg-2); }
+.dimmer  { color: var(--fg-3); }
+.dimmest { color: var(--fg-4); }
+.accent  { color: var(--accent); }
+.mono    { font-family: var(--mono); }
+
+.kbd {
+  font-family: var(--mono);
+  font-size: var(--fs-12);
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  color: var(--fg-2);
+}
+
+.hr { height: 1px; background: var(--line); border: 0; margin: 12px 0; }
+
+/* small markdown-ish renderer scope */
+.md p { margin: 0 0 8px; }
+.md p:last-child { margin-bottom: 0; }
+.md ul { margin: 0 0 8px; padding-left: 18px; }
+.md li { margin: 2px 0; }
+.md li::marker { color: var(--fg-4); }
+.md code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  background: var(--bg-3);
+  padding: 1px 5px;
+  border-radius: var(--r-3);
+  border: 1px solid var(--line);
+}
+.md strong { color: var(--fg); font-weight: 600; }
+.md em { color: var(--fg-2); font-style: normal; text-decoration: underline dotted var(--line-2); text-underline-offset: 3px; }
+.md a { color: var(--accent); text-decoration: underline dotted var(--line-2); text-underline-offset: 3px; }
+.md h4 { font-size: var(--fs-13); margin: 10px 0 4px; color: var(--fg-2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* focus ring */
+button:focus-visible, [role="button"]:focus-visible, a:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* scrollbar in artboards */
+.beacon-art ::-webkit-scrollbar { width: 8px; height: 8px; }
+.beacon-art ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+.beacon-art ::-webkit-scrollbar-track { background: transparent; }
+
+/* density modes — tweak "UI density" */
+body[data-density="compact"] { --fs-12: 10px; --fs-13: 11px; --fs-14: 12px; --fs-15: 13px; --fs-17: 15px; --fs-20: 17px; --fs-24: 20px; }
+body[data-density="comfy"]   { --fs-12: 12px; --fs-13: 13px; --fs-14: 14px; --fs-15: 15px; --fs-17: 17px; --fs-20: 21px; --fs-24: 24px; }
+body[data-density="compact"] table.beacon tbody td { height: 28px; padding: 4px 10px; }
+body[data-density="comfy"]   table.beacon tbody td { height: 44px; padding: 12px 10px; }

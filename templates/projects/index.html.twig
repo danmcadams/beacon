@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · projects{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'projects' } %}
+
+  {% block aside %}
+    <div class="projects-rail__summary">
+      <span class="projects-rail__kicker">projects</span>
+      <span class="projects-rail__total">{{ counts.all }} total</span>
+      <span class="projects-rail__breakdown">
+        {{ counts.active }} active <span class="dimmest">·</span>
+        {{ counts.on_hold }} on hold <span class="dimmest">·</span>
+        {{ counts.archived }} archived
+      </span>
+    </div>
+
+    <hr class="rail-section__divider">
+    <h3 class="rail-section__heading">Filter</h3>
+    <div class="projects-rail__filters">
+      {% for f in filters %}
+        <a href="{{ path('projects_index', f.value == 'all' ? {} : { status: f.value }) }}"
+           class="filter-tab{{ active_filter == f.value ? ' filter-tab--active' : '' }}">
+          {{ f.label|lower }} <span class="dimmer">{{ counts[f.value == 'on_hold' ? 'on_hold' : f.value] }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <header class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">manage</span>
+        <h1 class="page-header__title">Projects</h1>
+      </div>
+      <span class="page-header__spacer"></span>
+      <a href="{{ path('project_wizard_start') }}" class="b-btn b-btn--primary">+ new project</a>
+    </header>
+
+    {% if counts.all == 0 %}
+      <div class="projects-empty">
+        <div class="projects-empty__glyph">∅</div>
+        <div class="projects-empty__title">No projects yet</div>
+        <div class="projects-empty__sub">Beacon needs at least one project before it can generate briefings.</div>
+        <a href="{{ path('project_wizard_start') }}" class="b-btn b-btn--primary">+ create your first project</a>
+      </div>
+    {% elseif rows is empty %}
+      <div class="projects-table__wrap projects-table__wrap--empty">
+        <div class="projects-table__filter-empty">
+          No {{ active_filter|replace({'_': ' '}) }} projects.
+        </div>
+      </div>
+    {% else %}
+      <div class="projects-table__wrap">
+        <table class="projects-table" data-reorder-url="{{ path('projects_reorder') }}">
+          <thead>
+            <tr>
+              <th class="projects-table__swatch-col"></th>
+              <th>name</th>
+              <th class="projects-table__col--status">status</th>
+              <th class="projects-table__col--target">target</th>
+              <th class="projects-table__col--tickets">tickets today</th>
+              <th class="projects-table__col--briefing">briefing</th>
+              <th class="projects-table__col--updated">updated</th>
+              <th class="projects-table__col--actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr draggable="true"
+                  data-id="{{ r.id }}"
+                  data-href="{{ path('project_detail', { id: r.id }) }}">
+                <td><span class="projects-table__swatch" style="background: {{ r.color }}"></span></td>
+                <td><a href="{{ path('project_detail', { id: r.id }) }}" class="projects-table__name">{{ r.name }}</a></td>
+                <td><span class="pill pill--{{ r.status }}">{{ r.status|replace({'_': ' '}) }}</span></td>
+                <td class="muted num">{{ r.hours|number_format(1) }}h</td>
+                <td class="muted num">{{ r.ticket_count }}</td>
+                <td>
+                  {% if r.briefing_status == 'success' %}
+                    <span class="briefing-state briefing-state--ok">✓ generated</span>
+                  {% elseif r.briefing_status == 'failed' %}
+                    <span class="briefing-state briefing-state--err">⚠ failed</span>
+                  {% else %}
+                    <span class="dimmer">— pending</span>
+                  {% endif %}
+                </td>
+                <td class="dimmer">{{ r.updated_relative }}</td>
+                <td class="projects-table__col--actions">
+                  <a href="{{ path('project_detail', { id: r.id }) }}" class="projects-table__action">view</a>
+                  <a href="{{ path('project_edit', { id: r.id }) }}" class="projects-table__action">edit</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="projects-drop-end" hidden>drop here to move to end</div>
+      </div>
+    {% endif %}
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}

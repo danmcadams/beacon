@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · {{ project.name }}{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'projects' } %}
+
+  {% block aside %}
+    <div class="proj-rail__header">
+      <span class="rail-block__kicker">project</span>
+      <div class="proj-rail__name-row">
+        <span class="proj-rail__swatch" style="background: {{ project.color }};"></span>
+        <span class="proj-rail__name">{{ project.name }}</span>
+      </div>
+      <div class="proj-rail__meta">
+        <span class="pill pill--{{ project.status }}">{{ project.status|replace({'_': ' '}) }}</span>
+        <span class="dimmest">·</span>
+        <span>{{ project.hours|number_format(1) }}h/day target</span>
+      </div>
+    </div>
+
+    {% if quick_links is not empty %}
+      <hr class="rail-divider">
+      <h3 class="rail-section__title">Quick links</h3>
+      <div class="rail-section__body proj-rail__links">
+        {% for link in quick_links %}
+          <a href="{{ link.url }}" target="_blank" rel="noopener" class="proj-rail__link">
+            <span>{{ link.label }}</span>
+            <span class="dimmest">↗</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Actions</h3>
+    <div class="rail-section__body proj-rail__actions">
+      <button type="button" class="b-btn b-btn--ghost">↻ refresh tickets</button>
+      <button type="button" class="b-btn b-btn--ghost">↻ regenerate briefing</button>
+      <a href="{{ path('project_edit', { id: project.id }) }}" class="b-btn">✎ edit project</a>
+      <button type="button" class="b-btn b-btn--danger">⊗ archive</button>
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <div class="proj-detail__breadcrumb">
+      <a href="{{ path('projects_index') }}">projects</a>
+      <span class="dimmest">/</span>
+      <span style="color: var(--fg);">{{ project.name }}</span>
+    </div>
+
+    <header class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">{{ briefing_has_content ? 'briefing · today' : 'project' }}</span>
+        <h1 class="page-header__title">{{ project.name }}</h1>
+        <span class="page-header__subtitle">{{ project.hours|number_format(1) }}h allocated · {{ ticket_count }} tickets in queue</span>
+      </div>
+    </header>
+
+    <article class="proj-detail__briefing">
+      <div class="proj-detail__briefing-rule" style="background: {{ project.color }};"></div>
+      <div class="md">{{ briefing_html|raw }}</div>
+    </article>
+
+    <h2 class="proj-tickets__heading">
+      Tickets <span class="proj-tickets__count">· {{ ticket_count }} matching JQL filter</span>
+    </h2>
+
+    {% if tickets is empty %}
+      <div class="proj-tickets__empty">
+        No tickets match the configured JQL filter.
+      </div>
+    {% else %}
+      <div class="proj-tickets__table-wrap">
+        <table class="proj-tickets__table">
+          <thead>
+            <tr>
+              <th class="proj-tickets__col--key">key</th>
+              <th>summary</th>
+              <th class="proj-tickets__col--status">status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ticket in tickets %}
+              <tr>
+                <td>
+                  <span class="proj-tickets__key" style="color: {{ project.color }};">{{ ticket.key }}</span>
+                </td>
+                <td>{{ ticket.summary }}</td>
+                <td>
+                  <span class="pill {% if ticket.status == 'In Progress' %}pill--in-progress{% elseif ticket.status == 'Blocked' %}pill--blocked{% else %}pill--neutral{% endif %}">
+                    {{ ticket.status }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    <div class="proj-detail__cache-note">
+      cached from Jira · last refreshed {{ last_refreshed }}
+    </div>
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}

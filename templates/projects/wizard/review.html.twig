@@ -1,0 +1,24 @@
+{% extends 'projects/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<form method="post">
+  {% set linkCount = (state.links.links|default([]))|filter(l => l.label != '')|length %}
+<pre class="wiz-review">name        = {{ state.basics.name|default('—') }}
+description = {{ state.basics.description|default('—') }}
+color       = {{ state.basics.color|default('—') }}
+jira_url    = {{ state.jira.base_url|default('—') }}
+board_id    = {{ state.jira.board_id|default('—') }}
+jql_filter  = {{ state.jira.jql_filter|default('—')|default('—') }}
+hours/day   = {{ state.hours.daily_hours_target|default('—') }}
+links       = {{ linkCount }} configured</pre>
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('project_wizard_links') }}" class="b-btn">← back</a>
+    <button type="submit" class="b-btn b-btn--primary">✓ create project</button>
+  </div>
+</form>
+{% endblock %}

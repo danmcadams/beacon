@@ -1,0 +1,42 @@
+{# Project card. Required: project = {
+     name, slug, color, hours, ticket_count,
+     briefing_html, briefing_status,
+     tickets: [{key, summary, priority}]
+   }
+#}
+<article class="project-card">
+  <div class="project-card__rule" style="background: {{ project.color }};"></div>
+  <div class="project-card__tint" style="background: linear-gradient(180deg, {{ project.color }}10 0%, transparent 80px);"></div>
+
+  <header class="project-card__header">
+    <a href="{{ path('project_detail', { id: project.id }) }}" class="project-card__name" style="border-bottom: 1px dotted {{ project.color }};">
+      {{ project.name }} <span class="project-card__arrow">↗</span>
+    </a>
+    <span class="project-card__meta" style="color: {{ project.color }};">
+      {{ project.hours }}h <span class="project-card__meta-dim">·</span>
+      <span class="project-card__meta-dim">{{ project.ticket_count }} tickets</span>
+    </span>
+    <span class="project-card__spacer"></span>
+    <span class="project-card__slug">{{ project.slug }}</span>
+    <a href="#" class="project-card__regen" title="Regenerate">↻</a>
+  </header>
+
+  <div class="project-card__body">
+    <div class="md">
+      {{ project.briefing_html|raw }}
+    </div>
+  </div>
+
+  {% if project.tickets is defined and project.tickets|length > 0 %}
+    <div class="project-card__tickets">
+      <div class="project-card__tickets-title">Tickets · queued</div>
+      {% for ticket in project.tickets %}
+        <div class="project-card__ticket-row">
+          <span class="project-card__ticket-key" style="color: {{ project.color }};">{{ ticket.key }}</span>
+          <span class="project-card__ticket-summary">{{ ticket.summary }}</span>
+          <span class="project-card__ticket-prio">{{ ticket.priority }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</article>

@@ -1,0 +1,24 @@
+{% extends 'projects/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<form method="post" novalidate>
+  <label class="wiz-field">
+    <span class="wiz-field__label">Hours per day</span>
+    <input class="wiz-input" type="number" name="daily_hours_target" min="0" max="24" step="0.5" required value="{{ data.daily_hours_target }}" placeholder="3.0" style="width: 120px;" autofocus>
+    {% if errors.daily_hours_target is defined %}
+      <span class="wiz-field__error">{{ errors.daily_hours_target }}</span>
+    {% else %}
+      <span class="wiz-field__hint">Decimal. e.g. 1.0 for legacy, 6.0 for primary.</span>
+    {% endif %}
+  </label>
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('project_wizard_jira') }}" class="b-btn">← back</a>
+    <button type="submit" class="b-btn b-btn--primary">next →</button>
+  </div>
+</form>
+{% endblock %}

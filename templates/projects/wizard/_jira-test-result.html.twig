@@ -1,0 +1,11 @@
+<span id="jira-test-result" class="wiz-test__msg{% if result %}{% if result.state == 'ok' %} wiz-test__msg--ok{% elseif result.state == 'missing_credentials' %} wiz-test__msg--warn{% else %} wiz-test__msg--err{% endif %}{% endif %}">
+  {% if result is null %}
+    not yet tested
+  {% elseif result.state == 'ok' %}
+    ✓ connected — {{ result.ticketCount }} ticket{{ result.ticketCount == 1 ? '' : 's' }} match
+  {% elseif result.state == 'missing_credentials' %}
+    ⚠ {{ result.message }}
+  {% else %}
+    ✗ {{ result.message }}
+  {% endif %}
+</span>

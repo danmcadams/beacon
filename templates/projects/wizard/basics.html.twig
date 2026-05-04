@@ -1,0 +1,47 @@
+{% extends 'projects/wizard/_layout.html.twig' %}
+
+{% set swatch_colors = ['#89b4fa','#a6e3a1','#f9e2af','#f38ba8','#cba6f7','#94e2d5','#fab387','#f5c2e7'] %}
+
+{% block step_body %}
+<form method="post" novalidate>
+  <label class="wiz-field">
+    <span class="wiz-field__label">Name</span>
+    <input class="wiz-input" type="text" name="name" maxlength="100" required value="{{ data.name }}" placeholder="LicenseRegistry" autofocus>
+    {% if errors.name is defined %}
+      <span class="wiz-field__error">{{ errors.name }}</span>
+    {% else %}
+      <span class="wiz-field__hint">Short. Used in the dashboard and ticket prefixes.</span>
+    {% endif %}
+  </label>
+
+  <label class="wiz-field">
+    <span class="wiz-field__label">Description (optional)</span>
+    <textarea class="wiz-textarea" name="description" placeholder="One sentence. What is this project for?">{{ data.description }}</textarea>
+  </label>
+
+  <label class="wiz-field">
+    <span class="wiz-field__label">Color</span>
+    <div class="wiz-swatches">
+      {% for c in swatch_colors %}
+        <button type="button"
+                class="wiz-swatch{{ data.color|lower == c ? ' wiz-swatch--active' : '' }}"
+                style="background: {{ c }}"
+                title="{{ c }}"
+                onclick="document.getElementById('color-input').value='{{ c }}'; this.parentNode.querySelectorAll('.wiz-swatch').forEach(s=>s.classList.remove('wiz-swatch--active')); this.classList.add('wiz-swatch--active');"></button>
+      {% endfor %}
+    </div>
+    <input type="hidden" id="color-input" name="color" value="{{ data.color }}">
+    {% if errors.color is defined %}<span class="wiz-field__error">{{ errors.color }}</span>{% endif %}
+  </label>
+
+  <input type="hidden" name="sort_order" value="{{ data.sort_order }}">
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <button type="submit" class="b-btn b-btn--primary">next →</button>
+  </div>
+</form>
+{% endblock %}

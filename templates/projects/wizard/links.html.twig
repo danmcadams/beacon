@@ -1,0 +1,33 @@
+{% extends 'projects/wizard/_layout.html.twig' %}
+
+{% block step_body %}
+<form method="post" novalidate>
+  <div id="link-rows">
+    {% set rows = links is empty ? [{label: '', url: ''}] : links %}
+    {% for i, row in rows %}
+      <div class="wiz-link-row">
+        <input class="wiz-input wiz-input--label" type="text" name="label[]" placeholder="Label" value="{{ row.label }}">
+        <input class="wiz-input wiz-input--url" type="url" name="url[]" placeholder="https://..." value="{{ row.url }}">
+        <button type="button" class="b-btn b-btn--ghost" onclick="this.parentNode.remove()">−</button>
+      </div>
+      {% if errors[i] is defined %}<span class="wiz-field__error">{{ errors[i] }}</span>{% endif %}
+    {% endfor %}
+  </div>
+
+  <button type="button" class="b-btn" onclick="
+    const div = document.createElement('div');
+    div.className = 'wiz-link-row';
+    div.innerHTML = '<input class=\'wiz-input wiz-input--label\' type=\'text\' name=\'label[]\' placeholder=\'Label\'><input class=\'wiz-input wiz-input--url\' type=\'url\' name=\'url[]\' placeholder=\'https://...\'><button type=\'button\' class=\'b-btn b-btn--ghost\' onclick=\'this.parentNode.remove()\'>−</button>';
+    document.getElementById('link-rows').appendChild(div);
+  ">+ add link</button>
+{% endblock %}
+
+{% block step_actions %}
+  <div class="wiz-actions">
+    <button type="submit" class="b-btn b-btn--ghost" formaction="{{ path('project_wizard_cancel') }}" formnovalidate>cancel</button>
+    <span class="wiz-actions__spacer"></span>
+    <a href="{{ path('project_wizard_hours') }}" class="b-btn">← back</a>
+    <button type="submit" class="b-btn b-btn--primary">next →</button>
+  </div>
+</form>
+{% endblock %}

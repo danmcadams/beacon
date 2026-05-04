@@ -1,0 +1,39 @@
+{# App shell: top bar + content row (optional left rail + main).
+   Use via {% embed '_partials/_app-shell.html.twig' with { active_page: 'today' } %}
+     {% block aside %}...{% endblock %}
+     {% block main %}...{% endblock %}
+   {% endembed %}
+#}
+{% set active_page = active_page|default('today') %}
+<div class="app-shell">
+  <header class="app-shell__topbar">
+    <a href="{{ path('home') }}" class="app-shell__brand" title="beacon">
+      <span class="app-shell__brand-mark">B</span>
+      <span class="app-shell__brand-name">beacon</span>
+    </a>
+
+    <nav class="app-shell__nav">
+      <a href="{{ path('home') }}" class="nav-link{{ active_page == 'today' ? ' nav-link--active' : '' }}">today</a>
+      <a href="{{ path('projects_index') }}" class="nav-link{{ active_page == 'projects' ? ' nav-link--active' : '' }}">projects</a>
+      <a href="#" class="nav-link{{ active_page == 'schedule' ? ' nav-link--active' : '' }}">schedule</a>
+    </nav>
+
+    <span class="app-shell__spacer"></span>
+
+    <span class="app-shell__hint">
+      press <kbd class="kbd-chip">j</kbd> / <kbd class="kbd-chip">k</kbd> to navigate
+    </span>
+
+    <a href="#" class="app-shell__icon-btn{{ active_page == 'settings' ? ' app-shell__icon-btn--active' : '' }}" title="Settings">⚙</a>
+    <button type="button" class="app-shell__theme-indicator" title="Dark mode (MVP is dark-only)">☾ dark</button>
+  </header>
+
+  <div class="app-shell__content app-shell__content--with-aside">
+    <aside class="app-shell__aside">
+      {% block aside %}{% endblock %}
+    </aside>
+    <main class="app-shell__main">
+      {% block main %}{% endblock %}
+    </main>
+  </div>
+</div>

@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Beacon · edit · {{ project.name }}{% endblock %}
+
+{% block body %}
+{% embed '_partials/_app-shell.html.twig' with { active_page: 'projects' } %}
+
+  {% block aside %}
+    <div class="proj-rail__header">
+      <span class="rail-block__kicker">editing</span>
+      <div class="proj-rail__name-row">
+        <span class="proj-rail__swatch" style="background: {{ project.color }};"></span>
+        <span class="proj-rail__name">{{ project.name }}</span>
+      </div>
+    </div>
+
+    <hr class="rail-divider">
+    <h3 class="rail-section__title">Danger zone</h3>
+    <div class="rail-section__body proj-rail__actions">
+      <button type="button" class="b-btn b-btn--danger">⊗ archive project</button>
+      <p class="proj-edit__danger-note">archived projects don't generate briefings.</p>
+    </div>
+  {% endblock %}
+
+  {% block main %}
+    <div class="proj-detail__breadcrumb">
+      <a href="{{ path('projects_index') }}">projects</a>
+      <span class="dimmest">/</span>
+      <a href="{{ path('project_detail', { id: project.id }) }}">{{ project.name }}</a>
+      <span class="dimmest">/</span>
+      <span style="color: var(--fg);">edit</span>
+    </div>
+
+    <header class="page-header">
+      <div class="page-header__inner">
+        <span class="page-header__kicker">settings</span>
+        <h1 class="page-header__title">Edit project</h1>
+        <span class="page-header__subtitle">single-form view · all fields editable</span>
+      </div>
+    </header>
+
+    <form method="post" action="{{ path('project_edit', { id: project.id }) }}" novalidate>
+      <div class="proj-edit__card">
+
+        {# ── Basics ─────────────────────────────── #}
+        <h3 class="proj-edit__section-heading">Basics</h3>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Name</span>
+          <input class="wiz-input" type="text" name="name" maxlength="100" required value="{{ form.name }}">
+          {% if errors.name is defined %}
+            <span class="wiz-field__error">{{ errors.name }}</span>
+          {% endif %}
+        </label>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Description (optional)</span>
+          <textarea class="wiz-textarea" name="description">{{ form.description }}</textarea>
+        </label>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Status</span>
+          <select class="wiz-input proj-edit__select--status" name="status">
+            <option value="active"{% if form.status == 'active' %} selected{% endif %}>active</option>
+            <option value="on_hold"{% if form.status == 'on_hold' %} selected{% endif %}>on hold</option>
+            <option value="archived"{% if form.status == 'archived' %} selected{% endif %}>archived</option>
+          </select>
+          {% if errors.status is defined %}
+            <span class="wiz-field__error">{{ errors.status }}</span>
+          {% endif %}
+        </label>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Color</span>
+          <div class="wiz-swatches">
+            {% for c in swatch_colors %}
+              <button type="button"
+                      class="wiz-swatch{{ form.color|lower == c ? ' wiz-swatch--active' : '' }}"
+                      style="background: {{ c }}"
+                      title="{{ c }}"
+                      onclick="document.getElementById('color-input').value='{{ c }}'; this.parentNode.querySelectorAll('.wiz-swatch').forEach(function(s){s.classList.remove('wiz-swatch--active')}); this.classList.add('wiz-swatch--active');"></button>
+            {% endfor %}
+          </div>
+          <input type="hidden" id="color-input" name="color" value="{{ form.color }}">
+          {% if errors.color is defined %}
+            <span class="wiz-field__error">{{ errors.color }}</span>
+          {% endif %}
+        </label>
+
+        <hr class="proj-edit__divider">
+
+        {# ── Jira ────────────────────────────────── #}
+        <h3 class="proj-edit__section-heading">Jira</h3>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Base URL</span>
+          <input class="wiz-input" type="url" name="jira_base_url" value="{{ form.jira_base_url }}" placeholder="https://yourorg.atlassian.net">
+          {% if errors.jira_base_url is defined %}
+            <span class="wiz-field__error">{{ errors.jira_base_url }}</span>
+          {% endif %}
+        </label>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Board ID</span>
+          <input class="wiz-input proj-edit__input--board-id" type="text" name="jira_board_id" value="{{ form.jira_board_id }}" placeholder="LR">
+          {% if errors.jira_board_id is defined %}
+            <span class="wiz-field__error">{{ errors.jira_board_id }}</span>
+          {% endif %}
+        </label>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">JQL override (optional)</span>
+          <textarea class="wiz-textarea" name="jira_jql_filter">{{ form.jira_jql_filter }}</textarea>
+          <span class="wiz-field__hint">Default: assignee = currentUser() AND statusCategory != Done</span>
+        </label>
+
+        <div class="wiz-test">
+          <button type="button"
+                  class="b-btn"
+                  hx-post="{{ path('project_edit_jira_test', { id: project.id }) }}"
+                  hx-include="closest form"
+                  hx-target="#jira-test-result"
+                  hx-swap="outerHTML">↻ test connection</button>
+          {% include 'projects/wizard/_jira-test-result.html.twig' with { result: test_result } %}
+        </div>
+
+        <hr class="proj-edit__divider">
+
+        {# ── Time allocation ──────────────────────── #}
+        <h3 class="proj-edit__section-heading">Time allocation</h3>
+
+        <label class="wiz-field">
+          <span class="wiz-field__label">Daily target hours</span>
+          <input class="wiz-input proj-edit__input--hours" type="number" name="daily_hours_target" step="0.5" min="0" max="24" value="{{ form.daily_hours_target }}">
+          {% if errors.daily_hours_target is defined %}
+            <span class="wiz-field__error">{{ errors.daily_hours_target }}</span>
+          {% endif %}
+        </label>
+
+      </div>{# /.proj-edit__card #}
+
+      <div class="proj-edit__actions">
+        <a href="{{ path('project_detail', { id: project.id }) }}" class="b-btn b-btn--ghost">cancel</a>
+        <span class="proj-edit__actions-spacer"></span>
+        <button type="submit" class="b-btn b-btn--primary">✓ save changes</button>
+      </div>
+    </form>
+
+  {% endblock %}
+
+{% endembed %}
+{% endblock %}
