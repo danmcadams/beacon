@@ -29,7 +29,7 @@
 
   {% if project.tickets is defined and project.tickets|length > 0 %}
     <div class="project-card__tickets">
-      <div class="project-card__tickets-title">Tickets · queued</div>
+      <div class="project-card__tickets-title">Tickets · open</div>
       {% for ticket in project.tickets %}
         <div class="project-card__ticket-row">
           <span class="project-card__ticket-key" style="color: {{ project.color }};">{{ ticket.key }}</span>

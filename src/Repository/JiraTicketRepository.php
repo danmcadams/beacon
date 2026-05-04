@@ -23,9 +23,11 @@ final class JiraTicketRepository extends ServiceEntityRepository
     public function findForProject(Project $project): array
     {
         return $this->createQueryBuilder('t')
+            ->addSelect("CASE WHEN t.statusCategory = 'In Progress' THEN 0 ELSE 1 END AS HIDDEN status_sort")
             ->where('t.project = :project')
             ->setParameter('project', $project)
-            ->orderBy('t.priority', 'ASC')
+            ->orderBy('status_sort', 'ASC')
+            ->addOrderBy('t.priority', 'ASC')
             ->addOrderBy('t.ticketKey', 'ASC')
             ->getQuery()
             ->getResult();
