@@ -106,3 +106,20 @@ Visual design reference: `~/projects/beacon_design_handoff/`. The HTML/JSX is **
 ## When in doubt
 
 If a Symfony 7.4-specific pattern is ambiguous, fetch the version-pinned docs from `https://symfony.com/doc/7.4/<topic>.html` rather than guessing. **Do not use `/doc/current/`** — that points to Symfony 8, which we are not on. My (Claude's) Symfony knowledge is solid through ~2024; verify recent changes before producing patterns confidently.
+
+---
+
+## Session working loop
+
+- Read the matching handoff HTML/JSX in `~/projects/beacon_design_handoff/` **before** writing any templates or CSS. The visual structure, class names, and patterns there are the source of truth.
+- Implement one page at a time. After rendering, pause and ask the user to refresh + screenshot before declaring done. Never claim done off curl 200s alone.
+- Check `~/projects/gibson/docs/beacon/tracker.md` for current status and next tasks at the start of each session.
+
+---
+
+## Hard don'ts
+
+- No real Claude API or Jira calls — credentials aren't wired yet.
+- Never read `.env.local` — it's user-only, even to verify wiring.
+- No `/doc/current/` Symfony docs — use `/doc/7.4/`.
+- No `docker compose` (v2) — use `docker-compose` (v1).
