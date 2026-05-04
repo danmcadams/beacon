@@ -35,8 +35,12 @@
     <hr class="rail-divider">
     <h3 class="rail-section__title">Actions</h3>
     <div class="rail-section__body proj-rail__actions">
-      <button type="button" class="b-btn b-btn--ghost">↻ refresh tickets</button>
-      <button type="button" class="b-btn b-btn--ghost">↻ regenerate briefing</button>
+      <button type="button" class="b-btn"
+              hx-post="{{ path('project_refresh_tickets', { id: project.id }) }}"
+              hx-target="#proj-tickets-section"
+              hx-swap="outerHTML"
+              hx-indicator="#proj-tickets-section">↻ refresh tickets</button>
+      <button type="button" class="b-btn">↻ regenerate briefing</button>
       <a href="{{ path('project_edit', { id: project.id }) }}" class="b-btn">✎ edit project</a>
       <button type="button" class="b-btn b-btn--danger">⊗ archive</button>
     </div>
@@ -62,48 +66,7 @@
       <div class="md">{{ briefing_html|raw }}</div>
     </article>
 
-    <h2 class="proj-tickets__heading">
-      Tickets <span class="proj-tickets__count">· {{ ticket_count }} matching JQL filter</span>
-    </h2>
-
-    {% if tickets is empty %}
-      <div class="proj-tickets__empty">
-        No tickets match the configured JQL filter.
-      </div>
-    {% else %}
-      <div class="proj-tickets__table-wrap">
-        <table class="proj-tickets__table">
-          <thead>
-            <tr>
-              <th class="proj-tickets__col--key">key</th>
-              <th>summary</th>
-              <th class="proj-tickets__col--status">status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for ticket in tickets %}
-              <tr>
-                <td>
-                  <a class="proj-tickets__key" style="color: {{ project.color }};"
-                     href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
-                     target="_blank" rel="noopener">{{ ticket.key }}</a>
-                </td>
-                <td>{{ ticket.summary }}</td>
-                <td>
-                  <span class="pill {% if ticket.status == 'In Progress' %}pill--in-progress{% elseif ticket.status == 'Blocked' %}pill--blocked{% else %}pill--neutral{% endif %}">
-                    {{ ticket.status }}
-                  </span>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endif %}
-
-    <div class="proj-detail__cache-note">
-      cached from Jira · last refreshed {{ last_refreshed }}
-    </div>
+    {{ include('projects/_tickets-section.html.twig') }}
   {% endblock %}
 
 {% endembed %}

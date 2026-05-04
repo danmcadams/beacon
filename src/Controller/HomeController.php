@@ -121,7 +121,7 @@ final class HomeController extends AbstractController
                     'summary' => $t->getSummary(),
                     'priority' => $t->getPriority(),
                 ],
-                $tickets,
+                \array_slice($tickets, 0, 5),
             ),
         ];
     }

@@ -13,6 +13,7 @@ use App\Repository\BriefingRepository;
 use App\Repository\JiraTicketRepository;
 use App\Repository\ProjectRepository;
 use App\Service\JiraConnectionTester;
+use App\Service\JiraTicketRefresher;
 use App\Service\JiraUrlParser;
 use App\Twig\MarkdownExtension;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,6 +30,7 @@ final class ProjectController extends AbstractController
         private readonly BriefingRepository $briefings,
         private readonly MarkdownExtension $markdown,
         private readonly JiraConnectionTester $jiraTester,
+        private readonly JiraTicketRefresher $jiraRefresher,
         private readonly JiraUrlParser $jiraUrlParser,
         private readonly EntityManagerInterface $em,
     ) {
@@ -147,6 +149,39 @@ final class ProjectController extends AbstractController
                 'label' => $ql->getLabel(),
                 'url' => $ql->getUrl(),
             ], $project->getQuickLinks()->toArray()),
+            'last_refreshed' => $lastRefreshed,
+        ]);
+    }
+
+    #[Route('/projects/{id}/refresh-tickets', name: 'project_refresh_tickets', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function refreshTickets(Project $project): Response
+    {
+        $this->jiraRefresher->refresh($project);
+
+        $now = new \DateTimeImmutable('now');
+        $tickets = $this->tickets->findForProject($project);
+
+        $lastRefreshed = 'just now';
+        if ($tickets !== []) {
+            $latest = array_reduce(
+                $tickets,
+                fn (?JiraTicket $carry, JiraTicket $t) => ($carry === null || $t->getFetchedAt() > $carry->getFetchedAt()) ? $t : $carry,
+            );
+            $lastRefreshed = $this->relativeTime($latest->getFetchedAt(), $now);
+        }
+
+        return $this->render('projects/_tickets-section.html.twig', [
+            'project' => [
+                'id' => $project->getId(),
+                'color' => $project->getColor(),
+                'jira_base_url' => $project->getJiraBaseUrl(),
+            ],
+            'tickets' => array_map(fn (JiraTicket $t) => [
+                'key' => $t->getTicketKey(),
+                'summary' => $t->getSummary(),
+                'status' => $t->getStatus(),
+            ], $tickets),
+            'ticket_count' => count($tickets),
             'last_refreshed' => $lastRefreshed,
         ]);
     }

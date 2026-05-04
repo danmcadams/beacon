@@ -29,7 +29,14 @@
 
   {% if project.tickets is defined and project.tickets|length > 0 %}
     <div class="project-card__tickets">
-      <div class="project-card__tickets-title">Tickets · open</div>
+      <div class="project-card__tickets-title">
+        Tickets · open
+        {% if project.ticket_count > 5 %}
+          <a href="{{ path('project_detail', { id: project.id }) }}" class="project-card__tickets-more">
+            +{{ project.ticket_count - 5 }} more
+          </a>
+        {% endif %}
+      </div>
       {% for ticket in project.tickets %}
         <div class="project-card__ticket-row">
           <a class="project-card__ticket-key" style="color: {{ project.color }};"
