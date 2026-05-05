@@ -11,6 +11,7 @@ use App\Repository\BriefingRepository;
 use App\Repository\JiraTicketRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\ScheduleBlockRepository;
+use App\Service\ClockService;
 use App\Twig\MarkdownExtension;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,13 +25,14 @@ final class HomeController extends AbstractController
         private readonly JiraTicketRepository $tickets,
         private readonly BriefingRepository $briefings,
         private readonly MarkdownExtension $markdown,
+        private readonly ClockService $clock,
     ) {
     }
 
     #[Route('/yesterday', name: 'yesterday', methods: ['GET'])]
     public function yesterday(): Response
     {
-        $now       = new \DateTimeImmutable('now');
+        $now       = $this->clock->now();
         $yesterday = $now->modify('-1 day')->setTime(0, 0);
 
         $projects           = $this->projects->findActiveOrdered();
@@ -58,7 +60,7 @@ final class HomeController extends AbstractController
     #[Route('/', name: 'home', methods: ['GET'])]
     public function index(): Response
     {
-        $now = new \DateTimeImmutable('now');
+        $now = $this->clock->now();
         $today = $now->setTime(0, 0);
 
         $projects = $this->projects->findActiveOrdered();

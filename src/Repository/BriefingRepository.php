@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Briefing;
 use App\Entity\Project;
+use App\Service\ClockService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,7 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 final class BriefingRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private readonly ClockService $clock)
     {
         parent::__construct($registry, Briefing::class);
     }
@@ -62,7 +63,7 @@ final class BriefingRepository extends ServiceEntityRepository
      */
     public function getTokenAggregates(int $windowDays = 30): array
     {
-        $since = (new \DateTimeImmutable('now'))->modify("-{$windowDays} days")->setTime(0, 0);
+        $since = $this->clock->now()->modify("-{$windowDays} days")->setTime(0, 0);
 
         /** @var list<array{briefingDate: \DateTimeImmutable, input_sum: string|null, output_sum: string|null}> $rows */
         $rows = $this->createQueryBuilder('b')
@@ -87,7 +88,7 @@ final class BriefingRepository extends ServiceEntityRepository
 
         $perDay = [];
         for ($i = $windowDays - 1; $i >= 0; $i--) {
-            $date = (new \DateTimeImmutable("now -{$i} days"))->format('Y-m-d');
+            $date = $this->clock->now()->modify("-{$i} days")->format('Y-m-d');
             $perDay[] = $byDate[$date] ?? 0;
         }
 

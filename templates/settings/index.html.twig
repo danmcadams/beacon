@@ -16,6 +16,7 @@
     <h3 class="rail-section__title">Jump to</h3>
     <div class="rail-section__body">
       <div class="settings-rail__jumps">
+        <a href="#app" class="settings-rail__jump">Application</a>
         <a href="#jira" class="settings-rail__jump">Jira connections</a>
         <a href="#anthropic" class="settings-rail__jump">Anthropic API</a>
         <a href="#cron" class="settings-rail__jump">Cron</a>
@@ -59,6 +60,31 @@
         <span class="page-header__subtitle">connection tests, model selection, token tracking</span>
       </div>
     </div>
+
+    {# ── Application ── #}
+    <section id="app" style="margin-top: 14px;">
+      <div class="settings-panel">
+        <h2 class="settings-panel__title">Application</h2>
+        <p class="settings-panel__sub">display preferences</p>
+
+        <form id="app-settings-form"
+          hx-post="{{ path('settings_app_save') }}"
+          hx-target="#app-settings-form"
+          hx-swap="outerHTML">
+          <div class="settings-field">
+            <label class="settings-field__label" for="timezone">Timezone</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select class="settings-select" name="timezone" id="timezone">
+                {% for value, label in timezones %}
+                  <option value="{{ value }}"{{ value == app_timezone ? ' selected' : '' }}>{{ label }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="b-btn b-btn--primary">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
 
     {# ── Jira connections ── #}
     <section id="jira" style="margin-top: 14px;">

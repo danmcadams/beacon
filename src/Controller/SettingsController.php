@@ -5,21 +5,49 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Project;
+use App\Repository\AppSettingsRepository;
 use App\Repository\BriefingRepository;
 use App\Repository\JiraTicketRepository;
 use App\Repository\ProjectRepository;
+use App\Service\ClockService;
 use App\Service\JiraConnectionTester;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class SettingsController extends AbstractController
 {
+    private const TIMEZONES = [
+        'UTC'                  => 'UTC',
+        'America/New_York'     => 'Eastern (ET)',
+        'America/Chicago'      => 'Central (CT)',
+        'America/Denver'       => 'Mountain (MT)',
+        'America/Phoenix'      => 'Mountain no DST (AZ)',
+        'America/Los_Angeles'  => 'Pacific (PT)',
+        'America/Anchorage'    => 'Alaska (AKT)',
+        'Pacific/Honolulu'     => 'Hawaii (HT)',
+        'Europe/London'        => 'London (GMT/BST)',
+        'Europe/Paris'         => 'Central Europe (CET)',
+        'Europe/Helsinki'      => 'Eastern Europe (EET)',
+        'Asia/Dubai'           => 'Gulf (GST)',
+        'Asia/Kolkata'         => 'India (IST)',
+        'Asia/Bangkok'         => 'Indochina (ICT)',
+        'Asia/Shanghai'        => 'China (CST)',
+        'Asia/Tokyo'           => 'Japan (JST)',
+        'Australia/Sydney'     => 'Sydney (AEST)',
+        'Pacific/Auckland'     => 'New Zealand (NZST)',
+    ];
+
     public function __construct(
         private readonly ProjectRepository $projects,
         private readonly JiraTicketRepository $tickets,
         private readonly BriefingRepository $briefings,
         private readonly JiraConnectionTester $jiraTester,
+        private readonly AppSettingsRepository $appSettings,
+        private readonly EntityManagerInterface $em,
+        private readonly ClockService $clock,
         private readonly string $anthropicApiKey,
         private readonly string $anthropicModel,
     ) {
@@ -28,7 +56,7 @@ final class SettingsController extends AbstractController
     #[Route('/settings', name: 'settings', methods: ['GET'])]
     public function index(): Response
     {
-        $now = new \DateTimeImmutable('now');
+        $now = $this->clock->now();
         $allProjects = $this->projects->findOrdered();
 
         $jiraRows = array_map(function (Project $p) use ($now) {
@@ -61,7 +89,11 @@ final class SettingsController extends AbstractController
         $keyConfigured = $this->anthropicApiKey !== '';
         $jiraErrorCount = array_sum(array_map(fn (array $row) => $row['last_err'] !== null ? 1 : 0, $jiraRows));
 
+        $appSettings = $this->appSettings->getSettings();
+
         return $this->render('settings/index.html.twig', [
+            'app_timezone' => $appSettings->getTimezone(),
+            'timezones' => self::TIMEZONES,
             'jira_rows' => $jiraRows,
             'model' => $this->anthropicModel,
             'key_configured' => $keyConfigured,
@@ -85,6 +117,25 @@ final class SettingsController extends AbstractController
                 'jira_error_count' => $jiraErrorCount,
                 'jira_count' => \count($allProjects),
             ],
+        ]);
+    }
+
+    #[Route('/settings/app/save', name: 'settings_app_save', methods: ['POST'])]
+    public function saveApp(Request $request): Response
+    {
+        $timezone = $request->request->getString('timezone');
+
+        if (!in_array($timezone, \DateTimeZone::listIdentifiers(), true)) {
+            return new Response('Invalid timezone.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $settings = $this->appSettings->getSettings();
+        $settings->setTimezone($timezone);
+        $this->em->flush();
+
+        return $this->render('settings/_app-saved.html.twig', [
+            'app_timezone' => $timezone,
+            'timezones' => self::TIMEZONES,
         ]);
     }
 

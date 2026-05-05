@@ -15,6 +15,7 @@ use App\Repository\ProjectRepository;
 use App\Service\JiraConnectionTester;
 use App\Service\JiraTicketRefresher;
 use App\Service\JiraUrlParser;
+use App\Service\ClockService;
 use App\Twig\MarkdownExtension;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,6 +34,7 @@ final class ProjectController extends AbstractController
         private readonly JiraTicketRefresher $jiraRefresher,
         private readonly JiraUrlParser $jiraUrlParser,
         private readonly EntityManagerInterface $em,
+        private readonly ClockService $clock,
     ) {
     }
 
@@ -54,13 +56,13 @@ final class ProjectController extends AbstractController
             'archived' => \count(array_filter($all, fn (Project $p) => $p->getStatus() === ProjectStatus::Archived)),
         ];
 
-        $today = (new \DateTimeImmutable('now'))->setTime(0, 0);
+        $today = ($this->clock->now())->setTime(0, 0);
         $todays = [];
         foreach ($this->briefings->findForDate($today) as $b) {
             $todays[$b->getProject()->getId()] = $b;
         }
 
-        $now = new \DateTimeImmutable('now');
+        $now = $this->clock->now();
         $rowViews = array_map(
             fn (Project $p) => [
                 'id' => $p->getId(),
@@ -109,8 +111,8 @@ final class ProjectController extends AbstractController
     #[Route('/projects/{id}', name: 'project_detail', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Project $project): Response
     {
-        $today = (new \DateTimeImmutable('now'))->setTime(0, 0);
-        $now = new \DateTimeImmutable('now');
+        $today = ($this->clock->now())->setTime(0, 0);
+        $now = $this->clock->now();
 
         $briefing = $this->briefings->findOneForDateAndProject($today, $project);
         $tickets = $this->tickets->findForProject($project);
@@ -158,7 +160,7 @@ final class ProjectController extends AbstractController
     {
         $this->jiraRefresher->refresh($project);
 
-        $now = new \DateTimeImmutable('now');
+        $now = $this->clock->now();
         $tickets = $this->tickets->findForProject($project);
 
         return $this->render('_partials/_card-tickets.html.twig', [
@@ -182,7 +184,7 @@ final class ProjectController extends AbstractController
     {
         $this->jiraRefresher->refresh($project);
 
-        $now = new \DateTimeImmutable('now');
+        $now = $this->clock->now();
         $tickets = $this->tickets->findForProject($project);
 
         $lastRefreshed = 'just now';
