@@ -14,8 +14,16 @@
   <div id="anchors-rows">
     {% for i, row in rows %}
       <div class="sched-wiz-row">
-        <input type="time" name="rows[{{ i }}][start]" value="{{ row.start }}" class="wiz-input" required>
-        <input type="time" name="rows[{{ i }}][end]"   value="{{ row.end }}"   class="wiz-input" required>
+        <select name="rows[{{ i }}][start]" class="wiz-input">
+          {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
+            <option value="{{ t }}"{{ row.start == t ? ' selected' : '' }}>{{ t }}</option>
+          {% endfor %}{% endfor %}
+        </select>
+        <select name="rows[{{ i }}][end]" class="wiz-input">
+          {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
+            <option value="{{ t }}"{{ row.end == t ? ' selected' : '' }}>{{ t }}</option>
+          {% endfor %}{% endfor %}
+        </select>
         <input type="text" name="rows[{{ i }}][label]" value="{{ row.label }}" class="wiz-input" maxlength="100" placeholder="Label">
         <select name="rows[{{ i }}][type]" class="wiz-input">
           {% for typeCase in types %}
@@ -32,8 +40,16 @@
   {# Template for dynamically added rows #}
   <template id="anchor-row-tpl">
     <div class="sched-wiz-row">
-      <input type="time" name="rows[__IDX__][start]" value="09:00" class="wiz-input">
-      <input type="time" name="rows[__IDX__][end]"   value="10:00" class="wiz-input">
+      <select name="rows[__IDX__][start]" class="wiz-input">
+        {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
+          <option value="{{ t }}"{{ t == '09:00' ? ' selected' : '' }}>{{ t }}</option>
+        {% endfor %}{% endfor %}
+      </select>
+      <select name="rows[__IDX__][end]" class="wiz-input">
+        {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
+          <option value="{{ t }}"{{ t == '10:00' ? ' selected' : '' }}>{{ t }}</option>
+        {% endfor %}{% endfor %}
+      </select>
       <input type="text" name="rows[__IDX__][label]" value=""      class="wiz-input" maxlength="100" placeholder="Label">
       <select name="rows[__IDX__][type]" class="wiz-input">
         {% for typeCase in types %}

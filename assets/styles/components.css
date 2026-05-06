@@ -1002,6 +1002,7 @@ time, .mono-time {
 }
 .wiz-input:focus,
 .wiz-textarea:focus { border-color: var(--accent); }
+.wiz-input--error { border-color: var(--err) !important; }
 .wiz-textarea { min-height: 60px; resize: vertical; }
 
 .wiz-swatches { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -1378,6 +1379,13 @@ time, .mono-time {
   left: 0;
   right: 0;
   border-top: 1px solid var(--line);
+  pointer-events: none;
+}
+.sched-grid__half-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 45%, transparent);
   pointer-events: none;
 }
 

@@ -227,6 +227,10 @@ final class ProjectController extends AbstractController
             $hoursRaw = (string) $request->request->get('daily_hours_target', '0');
             $hours = is_numeric($hoursRaw) ? (float) $hoursRaw : -1.0;
 
+            $linkIds    = $request->request->all('link_id');
+            $linkLabels = $request->request->all('link_label');
+            $linkUrls   = $request->request->all('link_url');
+
             $parsed = $this->jiraUrlParser->parse($jiraUrl);
             $jiraBaseUrl = $parsed['base_url'];
             $jiraBoardId = $parsed['project_key'] ?? '';
@@ -253,6 +257,42 @@ final class ProjectController extends AbstractController
                 $errors['daily_hours_target'] = 'Daily target must be between 0 and 24.';
             }
 
+            $existingLinkIds = array_flip(
+                array_map(fn (QuickLink $ql) => (string) $ql->getId(), $project->getQuickLinks()->toArray())
+            );
+            $linkRowCount = max(\count($linkIds), \count($linkLabels), \count($linkUrls));
+            $linkErrors = [];
+            for ($i = 0; $i < $linkRowCount; $i++) {
+                $rowLabel = trim((string) ($linkLabels[$i] ?? ''));
+                $rowUrl   = trim((string) ($linkUrls[$i] ?? ''));
+                if ($rowLabel === '' && $rowUrl === '') {
+                    continue;
+                }
+                if ($rowLabel === '') {
+                    $linkErrors[$i] = ['field' => 'label', 'message' => 'Label is required.'];
+                } elseif (\strlen($rowLabel) > 100) {
+                    $linkErrors[$i] = ['field' => 'label', 'message' => 'Label too long.'];
+                } elseif ($rowUrl === '') {
+                    $linkErrors[$i] = ['field' => 'url', 'message' => 'URL is required.'];
+                } elseif (\strlen($rowUrl) > 500) {
+                    $linkErrors[$i] = ['field' => 'url', 'message' => 'URL too long.'];
+                } elseif (filter_var($rowUrl, FILTER_VALIDATE_URL) === false) {
+                    $linkErrors[$i] = ['field' => 'url', 'message' => 'URL is invalid.'];
+                }
+            }
+            if ($linkErrors !== []) {
+                $errors['links'] = $linkErrors;
+            }
+
+            $submittedLinks = [];
+            for ($i = 0; $i < $linkRowCount; $i++) {
+                $submittedLinks[] = [
+                    'id'    => trim((string) ($linkIds[$i] ?? '')),
+                    'label' => trim((string) ($linkLabels[$i] ?? '')),
+                    'url'   => trim((string) ($linkUrls[$i] ?? '')),
+                ];
+            }
+
             if ($errors === []) {
                 $project->setName($name);
                 $project->setDescription($description !== '' ? $description : null);
@@ -262,6 +302,46 @@ final class ProjectController extends AbstractController
                 $project->setJiraBoardId($jiraBoardId);
                 $project->setJiraJqlFilter($jiraJql !== '' ? $jiraJql : null);
                 $project->setDailyHoursTarget($hours);
+
+                $submittedById = [];
+                foreach ($submittedLinks as $i => $row) {
+                    if ($row['label'] === '' && $row['url'] === '') {
+                        continue;
+                    }
+                    if ($row['id'] !== '') {
+                        if (isset($existingLinkIds[$row['id']])) {
+                            $submittedById[(int) $row['id']] = ['label' => $row['label'], 'url' => $row['url'], 'sort' => $i];
+                        }
+                        // non-matching non-empty ID = tampered; silently ignore the row
+                    }
+                }
+
+                foreach ($project->getQuickLinks()->toArray() as $ql) {
+                    /** @var QuickLink $ql */
+                    $id = $ql->getId();
+                    if ($id !== null && isset($submittedById[$id])) {
+                        $ql->setLabel($submittedById[$id]['label']);
+                        $ql->setUrl($submittedById[$id]['url']);
+                        $ql->setSortOrder($submittedById[$id]['sort']);
+                    } else {
+                        $this->em->remove($ql);
+                    }
+                }
+
+                foreach ($submittedLinks as $i => $row) {
+                    if ($row['label'] === '' && $row['url'] === '') {
+                        continue;
+                    }
+                    if ($row['id'] === '') {
+                        $ql = new QuickLink();
+                        $ql->setProject($project);
+                        $ql->setLabel($row['label']);
+                        $ql->setUrl($row['url']);
+                        $ql->setSortOrder($i);
+                        $project->getQuickLinks()->add($ql);
+                        $this->em->persist($ql);
+                    }
+                }
 
                 $this->em->flush();
 
@@ -280,6 +360,7 @@ final class ProjectController extends AbstractController
                     'jira_parsed_key' => $jiraBoardId,
                     'jira_jql_filter' => $jiraJql,
                     'daily_hours_target' => $hours,
+                    'links' => $submittedLinks,
                 ],
                 'errors' => $errors,
                 'test_result' => null,
@@ -288,6 +369,11 @@ final class ProjectController extends AbstractController
         }
 
         $reconstructedUrl = sprintf('%s/projects/%s', $project->getJiraBaseUrl(), $project->getJiraBoardId());
+
+        $existingLinks = array_map(
+            fn (QuickLink $ql) => ['id' => $ql->getId(), 'label' => $ql->getLabel(), 'url' => $ql->getUrl()],
+            $project->getQuickLinks()->toArray(),
+        );
 
         return $this->render('projects/edit.html.twig', [
             'project' => [
@@ -305,6 +391,7 @@ final class ProjectController extends AbstractController
                 'jira_parsed_key' => $project->getJiraBoardId(),
                 'jira_jql_filter' => $project->getJiraJqlFilter() ?? '',
                 'daily_hours_target' => $project->getDailyHoursTarget(),
+                'links' => $existingLinks,
             ],
             'errors' => [],
             'test_result' => null,

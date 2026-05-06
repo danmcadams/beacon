@@ -89,6 +89,34 @@
 
         <hr class="proj-edit__divider">
 
+        {# ── Quick Links ──────────────────────────── #}
+        <h3 class="proj-edit__section-heading">Quick Links</h3>
+
+        <div id="link-rows">
+          {% set rows = form.links is empty ? [{id: '', label: '', url: ''}] : form.links %}
+          {% for i, row in rows %}
+            {% set rowError = (errors.links is defined and errors.links[i] is defined) ? errors.links[i] : null %}
+            <div class="wiz-link-row">
+              <input type="hidden" name="link_id[]" value="{{ row.id }}">
+              <input class="wiz-input wiz-input--label{{ rowError and rowError.field == 'label' ? ' wiz-input--error' : '' }}" type="text" name="link_label[]" placeholder="Label" maxlength="100" value="{{ row.label }}">
+              <input class="wiz-input wiz-input--url{{ rowError and rowError.field == 'url' ? ' wiz-input--error' : '' }}" type="url" name="link_url[]" placeholder="https://..." maxlength="500" value="{{ row.url }}">
+              <button type="button" class="b-btn b-btn--ghost" onclick="this.parentNode.remove()">−</button>
+            </div>
+            {% if rowError %}
+              <span class="wiz-field__error">{{ rowError.message }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <button type="button" class="b-btn" onclick="
+          const div = document.createElement('div');
+          div.className = 'wiz-link-row';
+          div.innerHTML = '<input type=\'hidden\' name=\'link_id[]\' value=\'\'><input class=\'wiz-input wiz-input--label\' type=\'text\' name=\'link_label[]\' placeholder=\'Label\' maxlength=\'100\'><input class=\'wiz-input wiz-input--url\' type=\'url\' name=\'link_url[]\' placeholder=\'https://...\' maxlength=\'500\'><button type=\'button\' class=\'b-btn b-btn--ghost\' onclick=\'this.parentNode.remove()\'>−</button>';
+          document.getElementById('link-rows').appendChild(div);
+        ">+ add link</button>
+
+        <hr class="proj-edit__divider">
+
         {# ── Jira ────────────────────────────────── #}
         <h3 class="proj-edit__section-heading">Jira</h3>
 
@@ -102,12 +130,6 @@
           {% elseif form.jira_parsed_host is not empty and form.jira_parsed_key is not empty %}
             <span class="wiz-field__hint">→ <span class="mono">{{ form.jira_parsed_host }}</span> · <span class="mono">{{ form.jira_parsed_key }}</span></span>
           {% endif %}
-        </label>
-
-        <label class="wiz-field">
-          <span class="wiz-field__label">JQL override (optional)</span>
-          <textarea class="wiz-textarea" name="jira_jql_filter">{{ form.jira_jql_filter }}</textarea>
-          <span class="wiz-field__hint">Default: assignee = currentUser() AND statusCategory != Done</span>
         </label>
 
         <div class="wiz-test">

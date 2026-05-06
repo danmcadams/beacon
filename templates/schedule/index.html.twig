@@ -111,13 +111,12 @@
           {# Day columns #}
           {% for day, label in days %}
             <div class="sched-grid__day-col" style="height: {{ grid_height }}px"
-                 hx-get="{{ path('schedule_block_new', { day: day }) }}"
-                 hx-target="#modal-slot"
-                 hx-swap="innerHTML"
-                 hx-trigger="click[!event.target.closest('.sched-block')]">
+                 data-day="{{ day }}"
+                 data-new-url="{{ path('schedule_block_new') }}">
               {# Hour grid lines #}
               {% for hour in hours %}
-                <div class="sched-grid__hour-line" style="top: {{ (hour - 7) * hour_height }}px; height: {{ hour_height }}px"></div>
+                <div class="sched-grid__hour-line" style="top: {{ (hour - 7) * hour_height }}px"></div>
+                <div class="sched-grid__half-line" style="top: {{ (hour - 7) * hour_height + hour_height / 2 }}px"></div>
               {% endfor %}
               {# Blocks #}
               {% for bv in week[day] %}

@@ -28,8 +28,16 @@
             <option value="{{ num }}"{{ defaults.day == num ? ' selected' : '' }}>{{ label }}</option>
           {% endfor %}
         </select>
-        <input type="time" name="start" value="{{ defaults.start }}" class="wiz-input" required>
-        <input type="time" name="end"   value="{{ defaults.end }}"   class="wiz-input" required>
+        <select name="start" class="wiz-input">
+          {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
+            <option value="{{ t }}"{{ defaults.start == t ? ' selected' : '' }}>{{ t }}</option>
+          {% endfor %}{% endfor %}
+        </select>
+        <select name="end" class="wiz-input">
+          {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
+            <option value="{{ t }}"{{ defaults.end == t ? ' selected' : '' }}>{{ t }}</option>
+          {% endfor %}{% endfor %}
+        </select>
       </div>
 
       <input type="text" name="label" value="{{ defaults.label }}"

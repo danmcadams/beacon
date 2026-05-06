@@ -64,15 +64,18 @@ final class ScheduleController extends AbstractController
     #[Route('/block/new', name: 'block_new', methods: ['GET'])]
     public function blockNew(Request $request): Response
     {
-        $day  = max(1, min(5, (int) $request->query->get('day', 1)));
-        $time = $request->query->get('time', '09:00');
+        $day   = max(1, min(5, (int) $request->query->get('day', 1)));
+        $start = $request->query->get('time', '09:00');
+        $end   = \DateTimeImmutable::createFromFormat('H:i', $start)
+            ?->modify('+30 minutes')
+            ->format('H:i') ?? '09:30';
 
         return $this->render('schedule/_block-form.html.twig', [
             'mode'   => 'add',
             'block'  => null,
             'days'   => self::DAYS,
             'types'  => BlockType::cases(),
-            'defaults' => ['day' => $day, 'start' => $time, 'end' => '', 'label' => '', 'type' => 'work_session'],
+            'defaults' => ['day' => $day, 'start' => $start, 'end' => $end, 'label' => '', 'type' => 'work_session'],
             'errors' => [],
         ]);
     }
