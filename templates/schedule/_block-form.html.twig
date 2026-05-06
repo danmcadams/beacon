@@ -6,7 +6,7 @@
     </h2>
     <p class="block-modal__sub">
       {% if mode == 'add' %}
-        will repeat every week on the chosen day
+        will repeat every week on the checked days
       {% else %}
         editing {{ days[defaults.day] }} {{ defaults.start }}–{{ defaults.end }}
       {% endif %}
@@ -22,12 +22,26 @@
           hx-target="#modal-slot"
           hx-swap="innerHTML">
 
-      <div class="block-modal__row">
+      {% if mode == 'add' %}
+        <div class="block-modal__days">
+          {% for num, label in days %}
+            <label class="block-modal__day-check">
+              <input type="checkbox" name="day[]" value="{{ num }}"
+                     {{ (defaults.days is defined ? num in defaults.days : num == defaults.day) ? 'checked' : '' }}>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="block-modal__row{{ mode == 'add' ? ' block-modal__row--no-day' : '' }}">
+        {% if mode == 'edit' %}
         <select name="day" class="wiz-input">
           {% for num, label in days %}
             <option value="{{ num }}"{{ defaults.day == num ? ' selected' : '' }}>{{ label }}</option>
           {% endfor %}
         </select>
+        {% endif %}
         <select name="start" class="wiz-input">
           {% for h in range(6, 23) %}{% for m in [0, 15, 30, 45] %}{% set t = '%02d:%02d'|format(h, m) %}
             <option value="{{ t }}"{{ defaults.start == t ? ' selected' : '' }}>{{ t }}</option>

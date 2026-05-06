@@ -83,7 +83,16 @@ final class ScheduleController extends AbstractController
     #[Route('/block', name: 'block_create', methods: ['POST'])]
     public function blockCreate(Request $request): Response
     {
-        [$data, $errors] = $this->readBlockInput($request);
+        $selectedDays = array_values(array_filter(
+            array_map('intval', $request->request->all('day')),
+            fn (int $d) => $d >= 1 && $d <= 5,
+        ));
+        if ($selectedDays === []) {
+            $selectedDays = [1];
+        }
+
+        [$data, $errors] = $this->readBlockInput($request, $selectedDays[0]);
+        $data['days'] = $selectedDays;
 
         if ($errors !== []) {
             return $this->render('schedule/_block-form.html.twig', [
@@ -96,8 +105,10 @@ final class ScheduleController extends AbstractController
             ]);
         }
 
-        $block = $this->hydrateBlock(new ScheduleBlock(), $data);
-        $this->em->persist($block);
+        foreach ($selectedDays as $day) {
+            $block = $this->hydrateBlock(new ScheduleBlock(), array_merge($data, ['day' => $day]));
+            $this->em->persist($block);
+        }
         $this->em->flush();
 
         return $this->htmxRedirect('schedule_index');
@@ -125,7 +136,8 @@ final class ScheduleController extends AbstractController
     #[Route('/block/{id}/update', name: 'block_update', methods: ['POST'])]
     public function blockUpdate(Request $request, ScheduleBlock $block): Response
     {
-        [$data, $errors] = $this->readBlockInput($request);
+        $day = max(1, min(5, (int) $request->request->get('day', 1)));
+        [$data, $errors] = $this->readBlockInput($request, $day);
 
         if ($errors !== []) {
             return $this->render('schedule/_block-form.html.twig', [
@@ -304,9 +316,8 @@ final class ScheduleController extends AbstractController
     }
 
     /** @return array{0: array<string, mixed>, 1: array<string, string>} */
-    private function readBlockInput(Request $request): array
+    private function readBlockInput(Request $request, int $day = 1): array
     {
-        $day   = max(1, min(5, (int) $request->request->get('day', 1)));
         $start = trim((string) $request->request->get('start', ''));
         $end   = trim((string) $request->request->get('end', ''));
         $label = trim((string) $request->request->get('label', ''));
