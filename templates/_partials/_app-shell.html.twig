@@ -25,7 +25,7 @@
     </span>
 
     <a href="{{ path('settings') }}" class="app-shell__icon-btn{{ active_page == 'settings' ? ' app-shell__icon-btn--active' : '' }}" title="Settings">⚙</a>
-    <button type="button" class="app-shell__theme-indicator" title="Dark mode (MVP is dark-only)">☾ dark</button>
+    <button type="button" id="theme-toggle" class="app-shell__theme-indicator" title="Toggle light/dark mode"></button>
   </header>
 
   <div class="app-shell__content app-shell__content--with-aside">

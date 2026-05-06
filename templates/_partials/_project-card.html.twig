@@ -4,15 +4,15 @@
      tickets: [{key, summary, priority}]
    }
 #}
-<article class="project-card">
-  <div class="project-card__rule" style="background: {{ project.color }};"></div>
-  <div class="project-card__tint" style="background: linear-gradient(180deg, {{ project.color }}10 0%, transparent 80px);"></div>
+<article class="project-card" style="--pc: {{ project.color }}">
+  <div class="project-card__rule"></div>
+  <div class="project-card__tint"></div>
 
   <header class="project-card__header">
-    <a href="{{ path('project_detail', { id: project.id }) }}" class="project-card__name" style="border-bottom: 1px dotted {{ project.color }};">
+    <a href="{{ path('project_detail', { id: project.id }) }}" class="project-card__name">
       {{ project.name }} <span class="project-card__arrow">↗</span>
     </a>
-    <span class="project-card__meta" style="color: {{ project.color }};">
+    <span class="project-card__meta">
       {{ project.hours }}h <span class="project-card__meta-dim">·</span>
       <span class="project-card__meta-dim">{{ project.ticket_count }} tickets</span>
     </span>

@@ -10,7 +10,7 @@
   </div>
   {% for ticket in project.tickets %}
     <div class="project-card__ticket-row">
-      <a class="project-card__ticket-key" style="color: {{ project.color }};"
+      <a class="project-card__ticket-key"
          href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
          target="_blank" rel="noopener">{{ ticket.key }}</a>
       <span class="project-card__ticket-summary">{{ ticket.summary }}</span>

@@ -3,3 +3,20 @@ import 'htmx.org';
 import './project-reorder.js';
 import './schedule.js';
 import './schedule-wizard.js';
+
+const root   = document.getElementById('root');
+const toggle = document.getElementById('theme-toggle');
+
+function applyTheme(theme) {
+  root.dataset.theme = theme;
+  localStorage.setItem('theme', theme);
+  if (toggle) toggle.textContent = theme === 'dark' ? '☾ dark' : '☀ light';
+}
+
+applyTheme(localStorage.getItem('theme') || 'dark');
+
+if (toggle) {
+  toggle.addEventListener('click', () => {
+    applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+}

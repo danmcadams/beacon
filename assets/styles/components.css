@@ -86,6 +86,7 @@
   font-size: var(--fs-12);
   border-radius: var(--r-3);
   line-height: 1.4;
+  cursor: pointer;
 }
 
 .app-shell__content {
@@ -457,12 +458,14 @@
 
 .project-card__rule {
   height: 2px;
+  background: var(--pc);
 }
 
 .project-card__tint {
   position: absolute;
   inset: 2px 0 0 0;
   pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 10%, transparent) 0%, transparent 80px);
 }
 
 .project-card__header {
@@ -479,6 +482,7 @@
   color: var(--fg);
   text-decoration: none;
   padding-bottom: 1px;
+  border-bottom: 1px dotted var(--pc);
 }
 
 .project-card__arrow {
@@ -490,6 +494,7 @@
 .project-card__meta {
   font-size: var(--fs-12);
   font-family: var(--mono);
+  color: var(--pc);
 }
 
 .project-card__meta-dim {
@@ -589,6 +594,7 @@
   font-family: var(--mono);
   white-space: nowrap;
   padding-right: 8px;
+  color: var(--pc);
 }
 
 .project-card__ticket-summary {
@@ -1214,7 +1220,7 @@ time, .mono-time {
 .proj-tickets__col--key { width: 90px; }
 .proj-tickets__col--status { width: 120px; }
 
-.proj-tickets__key { font-family: var(--mono); }
+.proj-tickets__key { font-family: var(--mono); color: var(--pc); }
 
 .pill--in-progress { color: var(--info); border-color: color-mix(in oklab, var(--info) 30%, transparent); }
 .pill--blocked     { color: var(--err);  border-color: color-mix(in oklab, var(--err)  30%, transparent); }
@@ -1725,4 +1731,15 @@ time, .mono-time {
   color: var(--fg);
   font-variant-numeric: tabular-nums;
   font-family: var(--mono);
+}
+
+/* ── Light mode: project colors as decoration only, not text ── */
+[data-theme="light"] .project-card__ticket-key,
+[data-theme="light"] .project-card__meta,
+[data-theme="light"] .proj-tickets__key {
+  color: var(--fg-2);
+}
+[data-theme="light"] .project-card__name {
+  color: var(--fg);
+  border-bottom-color: var(--line-2);
 }

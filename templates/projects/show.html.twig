@@ -47,6 +47,7 @@
   {% endblock %}
 
   {% block main %}
+    <div style="--pc: {{ project.color }}">
     <div class="proj-detail__breadcrumb">
       <a href="{{ path('projects_index') }}">projects</a>
       <span class="dimmest">/</span>
@@ -67,6 +68,7 @@
     </article>
 
     {{ include('projects/_tickets-section.html.twig') }}
+    </div>{# --pc wrapper #}
   {% endblock %}
 
 {% endembed %}

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" id="root">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>document.getElementById('root').dataset.theme=localStorage.getItem('theme')||'dark';</script>
         <title>{% block title %}Beacon{% endblock %}</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
         {% block stylesheets %}{% endblock %}
@@ -10,7 +11,7 @@
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
-    <body data-theme="dark">
+    <body>
         {% block body %}{% endblock %}
     </body>
 </html>
