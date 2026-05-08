@@ -27,9 +27,22 @@ services:
         arguments:
             $apiKey: '%env(ANTHROPIC_API_KEY)%'
 
-    App\Service\BriefingGenerator:
+    App\Service\ApiBriefingGenerator:
         arguments:
             $model: '%env(ANTHROPIC_MODEL)%'
+
+    App\Service\CliBriefingGenerator:
+        arguments:
+            $binary: '%env(CLAUDE_CLI_BIN)%'
+            $model: '%env(ANTHROPIC_MODEL)%'
+            $timeoutSeconds: '%env(int:CLAUDE_CLI_TIMEOUT)%'
+
+    App\Service\BriefingGeneratorFactory:
+        arguments:
+            $backend: '%env(BRIEFING_BACKEND)%'
+
+    App\Service\BriefingGeneratorInterface:
+        factory: ['@App\Service\BriefingGeneratorFactory', 'create']
 
     App\Controller\SettingsController:
         arguments:

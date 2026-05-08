@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Anthropic\Client;
 use App\Entity\JiraTicket;
 use App\Entity\Project;
 
-final class BriefingGenerator
+final class BriefingPromptBuilder
 {
-    /**
-     * Stable persona prompt — kept verbatim across calls so it can hit the
-     * Anthropic prompt cache. Volatile per-project content lives in the user
-     * message, after the cached prefix.
-     */
-    private const SYSTEM_PROMPT = <<<'TXT'
+    public const SYSTEM_PROMPT = <<<'TXT'
 You are Beacon, a daily briefing assistant for a solo developer juggling multiple projects.
 
 Your job: write a short markdown briefing telling the user what to focus on today for the given project, given its open Jira tickets.
@@ -33,56 +27,10 @@ Style:
 Tone: direct, calm, like a sharp peer giving a stand-up update. No corporate-speak.
 TXT;
 
-    public function __construct(
-        private readonly Client $anthropic,
-        private readonly string $model,
-    ) {
-    }
-
     /**
      * @param list<JiraTicket> $tickets
      */
-    public function generate(Project $project, array $tickets): BriefingResult
-    {
-        $userPrompt = $this->buildUserPrompt($project, $tickets);
-
-        $response = $this->anthropic->messages->create(
-            model: $this->model,
-            maxTokens: 4096,
-            thinking: ['type' => 'adaptive'],
-            system: [
-                [
-                    'type' => 'text',
-                    'text' => self::SYSTEM_PROMPT,
-                    'cacheControl' => ['type' => 'ephemeral'],
-                ],
-            ],
-            messages: [
-                ['role' => 'user', 'content' => $userPrompt],
-            ],
-        );
-
-        $text = '';
-        foreach ($response->content as $block) {
-            if ($block->type === 'text') {
-                $text .= $block->text;
-            }
-        }
-
-        return new BriefingResult(
-            markdown: trim($text),
-            model: $response->model,
-            inputTokens: $response->usage->inputTokens ?? 0,
-            outputTokens: $response->usage->outputTokens ?? 0,
-            cacheReadInputTokens: $response->usage->cacheReadInputTokens ?? 0,
-            cacheCreationInputTokens: $response->usage->cacheCreationInputTokens ?? 0,
-        );
-    }
-
-    /**
-     * @param list<JiraTicket> $tickets
-     */
-    private function buildUserPrompt(Project $project, array $tickets): string
+    public function buildUserPrompt(Project $project, array $tickets): string
     {
         $header = sprintf(
             "Project: %s\nDaily hour target: %.1fh",
