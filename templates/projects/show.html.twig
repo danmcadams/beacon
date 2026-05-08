@@ -39,13 +39,13 @@
               hx-post="{{ path('project_refresh_tickets', { id: project.id }) }}"
               hx-target="#proj-tickets-section"
               hx-swap="outerHTML"
-              hx-indicator="#proj-tickets-section">↻ refresh tickets</button>
+              hx-indicator="#proj-tickets-section"><span class="spin-on-busy">↻</span> refresh tickets</button>
       <button type="button" class="b-btn"
               hx-post="{{ path('project_regenerate_briefing', { id: project.id }) }}"
               hx-target="#proj-briefing-{{ project.id }}"
               hx-swap="outerHTML"
               hx-disabled-elt="this"
-              hx-indicator="#proj-briefing-{{ project.id }}">↻ regenerate briefing</button>
+              hx-indicator="#proj-briefing-{{ project.id }}"><span class="spin-on-busy">↻</span> regenerate briefing</button>
       <a href="{{ path('project_edit', { id: project.id }) }}" class="b-btn">✎ edit project</a>
       <button type="button" class="b-btn b-btn--danger">⊗ archive</button>
     </div>

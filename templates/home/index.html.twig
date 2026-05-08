@@ -70,7 +70,8 @@
       <div class="briefing-meta__actions">
         <button type="button" class="btn btn--primary"
                 hx-post="{{ path('briefings_regenerate_all') }}"
-                hx-disabled-elt="this">↻ regenerate</button>
+                hx-disabled-elt="this"
+                hx-indicator=".project-stack"><span class="spin-on-busy">↻</span> regenerate</button>
         <a href="{{ path('yesterday') }}" class="btn btn--link">← yesterday</a>
       </div>
     </div>
