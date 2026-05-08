@@ -41,7 +41,7 @@ final class ProjectController extends AbstractController
     #[Route('/projects', name: 'projects_index', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $filterRaw = (string) $request->query->get('status', 'all');
+        $filterRaw = (string) $request->query->get('status', ProjectStatus::Active->value);
         $filter = ProjectStatus::tryFrom($filterRaw);
 
         $all = $this->projects->findOrdered();

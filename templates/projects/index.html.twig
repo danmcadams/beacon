@@ -20,7 +20,7 @@
     <h3 class="rail-section__heading">Filter</h3>
     <div class="projects-rail__filters">
       {% for f in filters %}
-        <a href="{{ path('projects_index', f.value == 'all' ? {} : { status: f.value }) }}"
+        <a href="{{ path('projects_index', { status: f.value }) }}"
            class="filter-tab{{ active_filter == f.value ? ' filter-tab--active' : '' }}">
           {{ f.label|lower }} <span class="dimmer">{{ counts[f.value == 'on_hold' ? 'on_hold' : f.value] }}</span>
         </a>
