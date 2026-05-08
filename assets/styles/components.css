@@ -769,6 +769,27 @@ time, .mono-time {
   background: inherit;
 }
 
+/* Spin the ↻ glyph while the parent element is mid-request */
+@keyframes spin-loading {
+  to { transform: rotate(360deg); }
+}
+.spin-on-busy { display: inline-block; }
+[disabled] .spin-on-busy,
+.htmx-request .spin-on-busy {
+  animation: spin-loading 1s linear infinite;
+}
+
+/* Fade swap targets (briefing article, project card, project stack) while their
+   regenerate request is in flight, so the stale region reads as "being refreshed". */
+.proj-detail__briefing.htmx-request,
+.project-card.htmx-request,
+.project-stack.htmx-request,
+#proj-tickets-section.htmx-request {
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
 .projects-table__wrap {
   margin-top: 14px;
   border: 1px solid var(--line);
