@@ -9,6 +9,9 @@ services:
         GID: "${GID:-1000}"
     volumes:
       - ./:/app
+      # Share the host's Claude Code auth/config so briefings can use the CLI
+      # without an API key. Read-write because Claude Code writes session state.
+      - ${HOME}/.claude:/home/app/.claude
     working_dir: /app
 
   nginx:

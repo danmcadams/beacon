@@ -12,6 +12,11 @@ final class ClockService
 
     public function now(): \DateTimeImmutable
     {
-        return new \DateTimeImmutable('now', new \DateTimeZone($this->settings->getSettings()->getTimezone()));
+        return new \DateTimeImmutable('now', $this->timezone());
+    }
+
+    public function timezone(): \DateTimeZone
+    {
+        return new \DateTimeZone($this->settings->getSettings()->getTimezone());
     }
 }

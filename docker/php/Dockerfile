@@ -3,6 +3,8 @@ FROM php:8.4-fpm
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         unzip \
+        curl \
+        ca-certificates \
         libicu-dev \
         libsqlite3-dev \
         libzip-dev \
@@ -11,6 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         opcache \
         pdo_sqlite \
         zip \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g @anthropic-ai/claude-code \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

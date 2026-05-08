@@ -11,7 +11,7 @@ use App\Enum\BriefingStatus;
 use App\Repository\BriefingRepository;
 use App\Repository\JiraTicketRepository;
 use App\Repository\ProjectRepository;
-use App\Service\BriefingGenerator;
+use App\Service\BriefingGeneratorInterface;
 use App\Service\BriefingResult;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -31,7 +31,7 @@ final class GenerateBriefingsCommand extends Command
         private readonly ProjectRepository $projects,
         private readonly BriefingRepository $briefings,
         private readonly JiraTicketRepository $tickets,
-        private readonly BriefingGenerator $generator,
+        private readonly BriefingGeneratorInterface $generator,
         private readonly EntityManagerInterface $em,
     ) {
         parent::__construct();
@@ -144,7 +144,7 @@ final class GenerateBriefingsCommand extends Command
         } catch (\Throwable $e) {
             $briefing->setStatus(BriefingStatus::Failed)
                 ->setErrorMessage($e->getMessage())
-                ->setModel($this->generator instanceof BriefingGenerator ? 'failed' : 'failed')
+                ->setModel('failed')
                 ->setContentMarkdown($briefing->getContentMarkdown() ?: '');
 
             $tokenSummary = '—';
