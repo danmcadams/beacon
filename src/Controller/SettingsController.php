@@ -75,7 +75,9 @@ final class SettingsController extends AbstractController
         $cron = [
             'schedule' => '0 5 * * 1-5',
             'last_run' => $lastBriefing !== null
-                ? $lastBriefing->getGeneratedAt()->format('D M j · H:i')
+                ? $lastBriefing->getGeneratedAt()
+                    ->setTimezone($this->clock->timezone())
+                    ->format('D M j · H:i')
                 : '—',
             'last_error' => $lastFailed?->getErrorMessage(),
         ];

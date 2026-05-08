@@ -199,7 +199,9 @@ final class HomeController extends AbstractController
         }
 
         return [
-            'generated_at_long' => $latest->getGeneratedAt()->format('D M j · H:i'),
+            'generated_at_long' => $latest->getGeneratedAt()
+                ->setTimezone($this->clock->timezone())
+                ->format('D M j · H:i'),
             'model' => $latest->getModel(),
             'input_tokens' => number_format($inputSum),
             'output_tokens' => number_format($outputSum),

@@ -751,6 +751,24 @@ time, .mono-time {
 .b-btn--primary:hover { color: var(--bg); border-color: var(--accent-2); background: var(--accent-2); }
 .b-btn--danger:hover { border-color: var(--err); }
 
+/* Disabled / in-flight state — applied by hx-disabled-elt and the .htmx-request class */
+.b-btn:disabled,
+.b-btn.htmx-request,
+.btn:disabled,
+.btn.htmx-request {
+  opacity: 0.5;
+  cursor: progress;
+  pointer-events: none;
+}
+.b-btn:disabled:hover,
+.b-btn.htmx-request:hover,
+.btn:disabled:hover,
+.btn.htmx-request:hover {
+  color: inherit;
+  border-color: var(--line);
+  background: inherit;
+}
+
 .projects-table__wrap {
   margin-top: 14px;
   border: 1px solid var(--line);
