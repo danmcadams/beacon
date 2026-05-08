@@ -15,10 +15,45 @@
     </div>
 
     <hr class="rail-divider">
-    <h3 class="rail-section__title">Danger zone</h3>
-    <div class="rail-section__body proj-rail__actions">
-      <button type="button" class="b-btn b-btn--danger">⊗ archive project</button>
-      <p class="proj-edit__danger-note">archived projects don't generate briefings.</p>
+    <div class="rail-section__body">
+      <label class="wiz-field">
+        <span class="wiz-field__label">Status</span>
+        <select class="wiz-input proj-edit__select--status" name="status" form="edit-project-form">
+          <option value="active"{% if form.status == 'active' %} selected{% endif %}>active</option>
+          <option value="on_hold"{% if form.status == 'on_hold' %} selected{% endif %}>on hold</option>
+          {% if form.status == 'archived' %}
+            <option value="archived" selected>archived</option>
+          {% endif %}
+        </select>
+        {% if errors.status is defined %}
+          <span class="wiz-field__error">{{ errors.status }}</span>
+        {% endif %}
+      </label>
+
+      <label class="wiz-field">
+        <span class="wiz-field__label">Daily target hours</span>
+        <input class="wiz-input proj-edit__input--hours" type="number" name="daily_hours_target" step="0.5" min="0" max="24" value="{{ form.daily_hours_target }}" form="edit-project-form">
+        {% if errors.daily_hours_target is defined %}
+          <span class="wiz-field__error">{{ errors.daily_hours_target }}</span>
+        {% endif %}
+      </label>
+
+      <label class="wiz-field">
+        <span class="wiz-field__label">Color</span>
+        <div class="wiz-swatches">
+          {% for c in swatch_colors %}
+            <button type="button"
+                    class="wiz-swatch{{ form.color|lower == c ? ' wiz-swatch--active' : '' }}"
+                    style="background: {{ c }}"
+                    title="{{ c }}"
+                    onclick="document.getElementById('color-input').value='{{ c }}'; this.parentNode.querySelectorAll('.wiz-swatch').forEach(function(s){s.classList.remove('wiz-swatch--active')}); this.classList.add('wiz-swatch--active');"></button>
+          {% endfor %}
+        </div>
+        <input type="hidden" id="color-input" name="color" value="{{ form.color }}" form="edit-project-form">
+        {% if errors.color is defined %}
+          <span class="wiz-field__error">{{ errors.color }}</span>
+        {% endif %}
+      </label>
     </div>
   {% endblock %}
 
@@ -39,7 +74,7 @@
       </div>
     </header>
 
-    <form method="post" action="{{ path('project_edit', { id: project.id }) }}" novalidate>
+    <form id="edit-project-form" method="post" action="{{ path('project_edit', { id: project.id }) }}" novalidate>
       <div class="proj-edit__card">
 
         {# ── Basics ─────────────────────────────── #}
@@ -56,35 +91,6 @@
         <label class="wiz-field">
           <span class="wiz-field__label">Description (optional)</span>
           <textarea class="wiz-textarea" name="description">{{ form.description }}</textarea>
-        </label>
-
-        <label class="wiz-field">
-          <span class="wiz-field__label">Status</span>
-          <select class="wiz-input proj-edit__select--status" name="status">
-            <option value="active"{% if form.status == 'active' %} selected{% endif %}>active</option>
-            <option value="on_hold"{% if form.status == 'on_hold' %} selected{% endif %}>on hold</option>
-            <option value="archived"{% if form.status == 'archived' %} selected{% endif %}>archived</option>
-          </select>
-          {% if errors.status is defined %}
-            <span class="wiz-field__error">{{ errors.status }}</span>
-          {% endif %}
-        </label>
-
-        <label class="wiz-field">
-          <span class="wiz-field__label">Color</span>
-          <div class="wiz-swatches">
-            {% for c in swatch_colors %}
-              <button type="button"
-                      class="wiz-swatch{{ form.color|lower == c ? ' wiz-swatch--active' : '' }}"
-                      style="background: {{ c }}"
-                      title="{{ c }}"
-                      onclick="document.getElementById('color-input').value='{{ c }}'; this.parentNode.querySelectorAll('.wiz-swatch').forEach(function(s){s.classList.remove('wiz-swatch--active')}); this.classList.add('wiz-swatch--active');"></button>
-            {% endfor %}
-          </div>
-          <input type="hidden" id="color-input" name="color" value="{{ form.color }}">
-          {% if errors.color is defined %}
-            <span class="wiz-field__error">{{ errors.color }}</span>
-          {% endif %}
         </label>
 
         <hr class="proj-edit__divider">
@@ -142,19 +148,6 @@
           {% include 'projects/wizard/_jira-test-result.html.twig' with { result: test_result } %}
         </div>
 
-        <hr class="proj-edit__divider">
-
-        {# ── Time allocation ──────────────────────── #}
-        <h3 class="proj-edit__section-heading">Time allocation</h3>
-
-        <label class="wiz-field">
-          <span class="wiz-field__label">Daily target hours</span>
-          <input class="wiz-input proj-edit__input--hours" type="number" name="daily_hours_target" step="0.5" min="0" max="24" value="{{ form.daily_hours_target }}">
-          {% if errors.daily_hours_target is defined %}
-            <span class="wiz-field__error">{{ errors.daily_hours_target }}</span>
-          {% endif %}
-        </label>
-
       </div>{# /.proj-edit__card #}
 
       <div class="proj-edit__actions">
@@ -163,6 +156,30 @@
         <button type="submit" class="b-btn b-btn--primary">✓ save changes</button>
       </div>
     </form>
+
+    <section class="danger-zone" aria-labelledby="danger-zone-title">
+      <h2 id="danger-zone-title" class="danger-zone__heading">Danger zone</h2>
+      <div class="danger-zone__card">
+        <div class="danger-zone__row">
+          <div class="danger-zone__info">
+            <div class="danger-zone__info-title">Archive this project</div>
+            <div class="danger-zone__info-desc">Stops briefing generation and hides the project from the active list. Reactivate by setting the Status field to active.</div>
+          </div>
+          <button type="button" class="b-btn b-btn--danger"
+                  hx-post="{{ path('project_archive', { id: project.id }) }}"
+                  hx-confirm="Archive {{ form.name ?: project.name }}? Briefings will stop generating until you reactivate it.">Archive project</button>
+        </div>
+        <div class="danger-zone__row">
+          <div class="danger-zone__info">
+            <div class="danger-zone__info-title">Delete this project</div>
+            <div class="danger-zone__info-desc">Permanently removes the project plus every briefing, ticket, and quick link tied to it. Cannot be undone.</div>
+          </div>
+          <button type="button" class="b-btn b-btn--danger"
+                  hx-post="{{ path('project_delete', { id: project.id }) }}"
+                  hx-confirm="Permanently delete {{ form.name ?: project.name }}? This removes the project plus all its briefings, tickets, and quick links. Cannot be undone.">Delete project</button>
+        </div>
+      </div>
+    </section>
 
   {% endblock %}
 

@@ -215,7 +215,10 @@ final class ProjectController extends AbstractController
     #[Route('/projects/{id}/edit', name: 'project_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
     public function edit(Project $project, Request $request): Response
     {
-        $swatchColors = ['#89b4fa', '#a6e3a1', '#f9e2af', '#f38ba8', '#cba6f7', '#94e2d5', '#fab387', '#f5c2e7'];
+        $swatchColors = [
+            '#89b4fa', '#a6e3a1', '#f9e2af', '#f38ba8', '#cba6f7', '#94e2d5',
+            '#fab387', '#f5c2e7', '#89dceb', '#74c7ec', '#b4befe', '#eba0ac',
+        ];
 
         if ($request->isMethod('POST')) {
             $name = trim((string) $request->request->get('name', ''));
@@ -397,6 +400,30 @@ final class ProjectController extends AbstractController
             'test_result' => null,
             'swatch_colors' => $swatchColors,
         ]);
+    }
+
+    #[Route('/projects/{id}/archive', name: 'project_archive', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function archive(Project $project): Response
+    {
+        $project->setStatus(ProjectStatus::Archived);
+        $this->em->flush();
+
+        $response = new Response();
+        $response->headers->set('HX-Redirect', $this->generateUrl('projects_index'));
+
+        return $response;
+    }
+
+    #[Route('/projects/{id}/delete', name: 'project_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function delete(Project $project): Response
+    {
+        $this->em->remove($project);
+        $this->em->flush();
+
+        $response = new Response();
+        $response->headers->set('HX-Redirect', $this->generateUrl('projects_index'));
+
+        return $response;
     }
 
     #[Route('/projects/{id}/edit/jira-test', name: 'project_edit_jira_test', methods: ['POST'], requirements: ['id' => '\d+'])]
