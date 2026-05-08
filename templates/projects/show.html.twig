@@ -39,6 +39,7 @@
               hx-post="{{ path('project_refresh_tickets', { id: project.id }) }}"
               hx-target="#proj-tickets-section"
               hx-swap="outerHTML"
+              hx-disabled-elt="this"
               hx-indicator="#proj-tickets-section"><span class="spin-on-busy">↻</span> refresh tickets</button>
       <button type="button" class="b-btn"
               hx-post="{{ path('project_regenerate_briefing', { id: project.id }) }}"

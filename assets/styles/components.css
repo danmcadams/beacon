@@ -774,6 +774,7 @@ time, .mono-time {
   to { transform: rotate(360deg); }
 }
 .spin-on-busy { display: inline-block; }
+[disabled] .spin-on-busy,
 .htmx-request .spin-on-busy {
   animation: spin-loading 1s linear infinite;
 }
