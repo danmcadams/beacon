@@ -68,7 +68,9 @@
       <div class="briefing-meta__row briefing-meta__dim">{{ briefing.model }}</div>
       <div class="briefing-meta__row briefing-meta__dim">{{ briefing.input_tokens }} in / {{ briefing.output_tokens }} out</div>
       <div class="briefing-meta__actions">
-        <button type="button" class="btn btn--primary">↻ regenerate</button>
+        <button type="button" class="btn btn--primary"
+                hx-post="{{ path('briefings_regenerate_all') }}"
+                hx-disabled-elt="this">↻ regenerate</button>
         <a href="{{ path('yesterday') }}" class="btn btn--link">← yesterday</a>
       </div>
     </div>

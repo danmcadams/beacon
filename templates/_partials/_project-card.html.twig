@@ -4,7 +4,7 @@
      tickets: [{key, summary, priority}]
    }
 #}
-<article class="project-card" style="--pc: {{ project.color }}">
+<article class="project-card" id="project-card-{{ project.id }}" style="--pc: {{ project.color }}">
   <div class="project-card__rule"></div>
   <div class="project-card__tint"></div>
 
@@ -18,7 +18,12 @@
     </span>
     <span class="project-card__spacer"></span>
     <span class="project-card__slug">{{ project.slug }}</span>
-    <a href="#" class="project-card__regen" title="Regenerate">↻</a>
+    <a href="#" class="project-card__regen" title="Regenerate"
+       hx-post="{{ path('project_regenerate_briefing_card', { id: project.id }) }}"
+       hx-target="#project-card-{{ project.id }}"
+       hx-swap="outerHTML"
+       hx-disabled-elt="this"
+       hx-indicator="#project-card-{{ project.id }}">↻</a>
   </header>
 
   <div class="project-card__body">
