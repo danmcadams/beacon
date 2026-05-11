@@ -57,6 +57,27 @@ final class HomeController extends AbstractController
         ]);
     }
 
+    #[Route('/rail/now', name: 'home_rail_now', methods: ['GET'])]
+    public function railNow(): Response
+    {
+        $now = $this->clock->now();
+        $schedule = $this->buildScheduleView(
+            $this->blocks->findForDay((int) $now->format('N')),
+            $now,
+        );
+
+        return $this->render('home/_rail-now.html.twig', [
+            'schedule' => $schedule['blocks'],
+            'now' => [
+                'day_label' => $now->format('l'),
+                'date_label' => $now->format('D M j'),
+                'time_label' => $now->format('H:i'),
+                'in_block' => $schedule['in_block'],
+                'up_next' => $schedule['up_next'],
+            ],
+        ]);
+    }
+
     #[Route('/', name: 'home', methods: ['GET'])]
     public function index(): Response
     {

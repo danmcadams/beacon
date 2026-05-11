@@ -6,39 +6,7 @@
 {% embed '_partials/_app-shell.html.twig' with { active_page: 'today' } %}
 
   {% block aside %}
-    <div class="rail-block">
-      <span class="rail-block__kicker">today</span>
-      <span class="rail-block__day">{{ now.day_label }}</span>
-      <span class="rail-block__date">{{ now.date_label }} · {{ now.time_label }}</span>
-    </div>
-
-    <div class="now-block">
-      {% if now.in_block %}
-        <span class="now-block__label">NOW · {{ now.in_block.start }}–{{ now.in_block.end }}</span>
-        <div class="now-block__title">{{ now.in_block.label }}</div>
-      {% elseif now.up_next %}
-        <span class="now-block__label">NEXT</span>
-        <div><span class="now-block__next">{{ now.up_next.label }}</span> <span class="briefing-meta__dim">at {{ now.up_next.start }}</span></div>
-      {% else %}
-        <span class="now-block__label">NEXT</span>
-        <div class="briefing-meta__dim">day complete</div>
-      {% endif %}
-    </div>
-
-    <hr class="rail-divider">
-    <h3 class="rail-section__title">Schedule</h3>
-    <div class="rail-section__body">
-      <div class="schedule-list">
-        {% for b in schedule %}
-          {% set is_current = b.is_current|default(false) %}
-          {% set is_past = b.is_past|default(false) %}
-          <div class="schedule-list__row{{ is_current ? ' schedule-list__row--current' : '' }}{{ is_past ? ' schedule-list__row--past' : '' }}">
-            <span class="schedule-list__time">{{ b.start }}</span>
-            <span class="schedule-list__label">{{ b.label }}</span>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
+    {{ include('home/_rail-now.html.twig') }}
 
     <hr class="rail-divider">
     <h3 class="rail-section__title">Allocation</h3>
