@@ -2,6 +2,23 @@
 
 {% block title %}Beacon · today{% endblock %}
 
+{% block javascripts %}
+  {{ parent() }}
+  <script>
+    (function () {
+      function tick() {
+        document.body.dispatchEvent(new CustomEvent('rail-tick'));
+      }
+      const now = new Date();
+      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+      setTimeout(function () {
+        tick();
+        setInterval(tick, 60000);
+      }, msToNextMinute);
+    })();
+  </script>
+{% endblock %}
+
 {% block body %}
 {% embed '_partials/_app-shell.html.twig' with { active_page: 'today' } %}
 
