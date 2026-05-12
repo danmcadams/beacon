@@ -71,10 +71,10 @@
       </div>
       <span class="page-header__spacer"></span>
       <button type="button" class="btn btn--ghost"
-              onclick="document.querySelector('.project-stack').classList.toggle('project-stack--hide-tickets'); this.textContent = this.textContent.trim() === 'Hide Jira Tickets' ? 'Show Jira Tickets' : 'Hide Jira Tickets';">Hide Jira Tickets</button>
+              onclick="document.querySelector('.project-stack').classList.toggle('project-stack--hide-tickets'); this.textContent = this.textContent.trim() === 'Hide Jira Tickets' ? 'Show Jira Tickets' : 'Hide Jira Tickets';">Show Jira Tickets</button>
     </header>
 
-    <div class="project-stack">
+    <div class="project-stack project-stack--hide-tickets">
       {% for project in projects %}
         {% include '_partials/_project-card.html.twig' with { project: project } only %}
       {% endfor %}
