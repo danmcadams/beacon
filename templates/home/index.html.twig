@@ -70,15 +70,33 @@
         <span class="page-header__subtitle">{{ projects|length }} projects · {{ total_hours|number_format(1) }}h allocated</span>
       </div>
       <span class="page-header__spacer"></span>
-      <button type="button" class="btn btn--ghost"
-              onclick="document.querySelector('.project-stack').classList.toggle('project-stack--hide-tickets'); this.textContent = this.textContent.trim() === 'Hide Jira Tickets' ? 'Show Jira Tickets' : 'Hide Jira Tickets';">Show Jira Tickets</button>
+      <button type="button" class="btn btn--ghost" id="toggle-jira-tickets">Show Jira Tickets</button>
     </header>
 
-    <div class="project-stack project-stack--hide-tickets">
+    <div class="project-stack project-stack--hide-tickets" id="project-stack">
       {% for project in projects %}
         {% include '_partials/_project-card.html.twig' with { project: project } only %}
       {% endfor %}
     </div>
+
+    <script>
+      (function () {
+        var stack = document.getElementById('project-stack');
+        var btn = document.getElementById('toggle-jira-tickets');
+        if (!stack || !btn) return;
+        var KEY = 'beacon.today.showJiraTickets';
+        function apply(show) {
+          stack.classList.toggle('project-stack--hide-tickets', !show);
+          btn.textContent = show ? 'Hide Jira Tickets' : 'Show Jira Tickets';
+        }
+        apply(sessionStorage.getItem(KEY) === '1');
+        btn.addEventListener('click', function () {
+          var show = stack.classList.contains('project-stack--hide-tickets');
+          sessionStorage.setItem(KEY, show ? '1' : '0');
+          apply(show);
+        });
+      })();
+    </script>
   {% endblock %}
 
 {% endembed %}
