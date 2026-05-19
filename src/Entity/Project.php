@@ -39,6 +39,9 @@ class Project
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $jiraJqlFilter = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $briefingContext = null;
+
     #[ORM\Column(type: Types::DECIMAL, precision: 3, scale: 1)]
     private string $dailyHoursTarget = '0.0';
 
@@ -91,6 +94,9 @@ class Project
 
     public function getJiraJqlFilter(): ?string { return $this->jiraJqlFilter; }
     public function setJiraJqlFilter(?string $v): self { $this->jiraJqlFilter = $v; return $this; }
+
+    public function getBriefingContext(): ?string { return $this->briefingContext; }
+    public function setBriefingContext(?string $v): self { $this->briefingContext = $v; return $this; }
 
     public function getDailyHoursTarget(): float { return (float) $this->dailyHoursTarget; }
     public function setDailyHoursTarget(float $v): self { $this->dailyHoursTarget = (string) $v; return $this; }

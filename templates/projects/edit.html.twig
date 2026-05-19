@@ -93,6 +93,12 @@
           <textarea class="wiz-textarea" name="description">{{ form.description }}</textarea>
         </label>
 
+        <label class="wiz-field">
+          <span class="wiz-field__label">Briefing context (optional)</span>
+          <span class="wiz-field__hint">Free-form notes the AI briefing should know about — planning notes, current focus, recent decisions. Plain text, appended verbatim to the prompt.</span>
+          <textarea class="wiz-textarea" name="briefing_context" rows="8">{{ form.briefing_context }}</textarea>
+        </label>
+
         <hr class="proj-edit__divider">
 
         {# ── Quick Links ──────────────────────────── #}

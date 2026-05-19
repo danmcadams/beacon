@@ -42,6 +42,11 @@ TXT;
             $header .= "\nDescription: " . $project->getDescription();
         }
 
+        $context = $project->getBriefingContext();
+        if ($context !== null && trim($context) !== '') {
+            $header .= "\n\n## Context\n" . $context;
+        }
+
         if ($tickets === []) {
             return $header . "\n\nNo tickets in queue. Write a short briefing acknowledging there's nothing on fire and suggesting any kind of slack-time work that fits a "
                 . number_format($project->getDailyHoursTarget(), 1) . "h slot.";
