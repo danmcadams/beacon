@@ -227,6 +227,7 @@ final class ProjectController extends AbstractController
             $statusRaw = (string) $request->request->get('status', 'active');
             $jiraUrl = trim((string) $request->request->get('jira_url', ''));
             $jiraJql = trim((string) $request->request->get('jira_jql_filter', ''));
+            $briefingContext = trim((string) $request->request->get('briefing_context', ''));
             $hoursRaw = (string) $request->request->get('daily_hours_target', '0');
             $hours = is_numeric($hoursRaw) ? (float) $hoursRaw : -1.0;
 
@@ -304,6 +305,7 @@ final class ProjectController extends AbstractController
                 $project->setJiraBaseUrl($jiraBaseUrl);
                 $project->setJiraBoardId($jiraBoardId);
                 $project->setJiraJqlFilter($jiraJql !== '' ? $jiraJql : null);
+                $project->setBriefingContext($briefingContext !== '' ? $briefingContext : null);
                 $project->setDailyHoursTarget($hours);
 
                 $submittedById = [];
@@ -362,6 +364,7 @@ final class ProjectController extends AbstractController
                     'jira_parsed_host' => $jiraBaseUrl,
                     'jira_parsed_key' => $jiraBoardId,
                     'jira_jql_filter' => $jiraJql,
+                    'briefing_context' => $briefingContext,
                     'daily_hours_target' => $hours,
                     'links' => $submittedLinks,
                 ],
@@ -393,6 +396,7 @@ final class ProjectController extends AbstractController
                 'jira_parsed_host' => $project->getJiraBaseUrl(),
                 'jira_parsed_key' => $project->getJiraBoardId(),
                 'jira_jql_filter' => $project->getJiraJqlFilter() ?? '',
+                'briefing_context' => $project->getBriefingContext() ?? '',
                 'daily_hours_target' => $project->getDailyHoursTarget(),
                 'links' => $existingLinks,
             ],
