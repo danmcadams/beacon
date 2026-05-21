@@ -95,7 +95,7 @@ final class SettingsController extends AbstractController
 
         return $this->render('settings/index.html.twig', [
             'app_timezone' => $appSettings->getTimezone(),
-            'notification_leads' => implode(', ', $appSettings->getNotificationLeadMinutes()),
+            'notification_leads' => $appSettings->getNotificationLeadMinutes(),
             'timezones' => self::TIMEZONES,
             'jira_rows' => $jiraRows,
             'model' => $this->anthropicModel,
@@ -132,26 +132,21 @@ final class SettingsController extends AbstractController
             return new Response('Invalid timezone.', Response::HTTP_BAD_REQUEST);
         }
 
-        $leadsRaw = $request->request->getString('notification_leads', '');
+        $leadsRaw = $request->request->all('notification_leads');
         $leads = array_values(array_unique(array_filter(
-            array_map('intval', array_filter(array_map('trim', explode(',', $leadsRaw)), fn (string $s) => $s !== '')),
-            fn (int $v) => $v >= 1 && $v <= 240,
+            array_map('intval', $leadsRaw),
+            fn (int $v) => in_array($v, [5, 10, 15], true),
         )));
         rsort($leads);
-        if (\count($leads) > 6) {
-            $leads = \array_slice($leads, 0, 6);
-        }
 
         $settings = $this->appSettings->getSettings();
         $settings->setTimezone($timezone);
         $settings->setNotificationLeadMinutes($leads);
         $this->em->flush();
 
-        return $this->render('settings/_app-saved.html.twig', [
-            'app_timezone' => $timezone,
-            'notification_leads' => implode(', ', $leads),
-            'timezones' => self::TIMEZONES,
-        ]);
+        $response = new Response('', Response::HTTP_NO_CONTENT);
+        $response->headers->set('HX-Trigger', 'settings-saved');
+        return $response;
     }
 
     #[Route('/settings/jira/{id}/test', name: 'settings_jira_test', methods: ['POST'])]

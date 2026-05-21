@@ -65,56 +65,101 @@
     <section id="app" style="margin-top: 14px;">
       <div class="settings-panel">
         <h2 class="settings-panel__title">Application</h2>
-        <p class="settings-panel__sub">display preferences</p>
 
         <form id="app-settings-form"
           hx-post="{{ path('settings_app_save') }}"
-          hx-target="#app-settings-form"
-          hx-swap="outerHTML">
+          hx-swap="none">
+          <p class="settings-panel__sub" style="margin-top: 10px;">Display Preferences</p>
           <div class="settings-field">
             <label class="settings-field__label" for="timezone">Timezone</label>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <select class="settings-select" name="timezone" id="timezone">
-                {% for value, label in timezones %}
-                  <option value="{{ value }}"{{ value == app_timezone ? ' selected' : '' }}>{{ label }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="b-btn b-btn--primary">Save</button>
-            </div>
+            <select class="settings-select" name="timezone" id="timezone">
+              {% for value, label in timezones %}
+                <option value="{{ value }}"{{ value == app_timezone ? ' selected' : '' }}>{{ label }}</option>
+              {% endfor %}
+            </select>
           </div>
 
-          <div class="settings-field" style="margin-top: 14px;">
-            <label class="settings-field__label" for="notification_leads">Lead-time alerts</label>
-            <p class="dimmer" style="font-size: var(--fs-12); margin: 4px 0 8px;">
-              Minutes before a block to fire a browser notification. Enter comma-separated values (e.g. <code class="settings-code">15, 10, 5</code>). Leave blank to disable. Max 6 values, each between 1–240.
-            </p>
-            <input class="settings-input" type="text" name="notification_leads"
-                   id="notification_leads" value="{{ notification_leads }}"
-                   placeholder="15, 10, 5" style="width: 180px;">
+          <p class="settings-panel__sub" style="margin-top: 18px;">Browser Notifications</p>
+          <p class="dimmer" style="font-size: var(--fs-12); margin: 0 0 8px;">
+            Minutes before a block to fire a notification.
+          </p>
+          <div id="notif-controls" style="display: flex; align-items: center; gap: 18px;">
+            {% for v in [5, 10, 15] %}
+              <label class="notif-lead-check" style="display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: var(--fs-13); cursor: pointer;">
+                <input type="checkbox" name="notification_leads[]" value="{{ v }}"
+                       {{ v in notification_leads ? 'checked' : '' }}
+                       disabled>
+                {{ v }}
+              </label>
+            {% endfor %}
+          </div>
+          <div id="notif-permission-ui" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;"></div>
+
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 16px;">
+            <span id="app-saved-flag" style="display: none; color: var(--ok); font-size: var(--fs-12); transition: opacity 0.4s;">✓ saved</span>
+            <button type="submit" class="b-btn b-btn--primary">Save</button>
           </div>
         </form>
 
-        <div class="settings-field" id="notif-permission-row" style="margin-top: 14px;">
-          <span class="settings-field__label">Browser notifications</span>
-          <div id="notif-permission-ui" style="margin-top: 6px;"></div>
-        </div>
-        <script type="module">
-          import { requestPermission, sendTest } from 'notifications';
+        <script>
           (function () {
-            var ui = document.getElementById('notif-permission-ui');
-            if (!ui || !('Notification' in window)) return;
+            var savedTimer = null;
+            document.body.addEventListener('settings-saved', function () {
+              var flag = document.getElementById('app-saved-flag');
+              if (!flag) return;
+              if (savedTimer) clearTimeout(savedTimer);
+              flag.style.display = 'inline';
+              flag.style.opacity = '1';
+              savedTimer = setTimeout(function () {
+                flag.style.opacity = '0';
+                setTimeout(function () { flag.style.display = 'none'; }, 400);
+              }, 2000);
+            });
+          })();
+        </script>
+
+        <script type="module">
+          import { requestPermission, isDisabled, disable, enable, sendTest } from 'notifications';
+          (function () {
+            if (!('Notification' in window)) return;
+            function ui()    { return document.getElementById('notif-permission-ui'); }
+            function checkboxes() { return document.querySelectorAll('input[name="notification_leads[]"]'); }
+            function setInputEnabled(enabled) {
+              checkboxes().forEach(function (cb) {
+                cb.disabled = !enabled;
+                var label = cb.closest('label');
+                if (label) {
+                  label.style.opacity = enabled ? '1' : '0.4';
+                  label.style.cursor = enabled ? 'pointer' : 'not-allowed';
+                }
+              });
+            }
             function render() {
+              var box = ui();
+              if (!box) return;
               var perm = Notification.permission;
-              if (perm === 'default') {
-                ui.innerHTML = '<button type="button" class="b-btn">Enable notifications</button>';
-                ui.querySelector('button').addEventListener('click', function () {
+              if (perm === 'granted' && !isDisabled()) {
+                box.innerHTML = '<button type="button" class="b-btn" data-act="disable">Disable Notifications</button> <button type="button" class="b-btn" data-act="test">Send test</button>';
+                box.querySelector('[data-act="disable"]').addEventListener('click', function () {
+                  disable(); render();
+                });
+                box.querySelector('[data-act="test"]').addEventListener('click', sendTest);
+                setInputEnabled(true);
+              } else if (perm === 'granted' && isDisabled()) {
+                box.innerHTML = '<button type="button" class="b-btn">Enable Notifications</button>';
+                box.querySelector('button').addEventListener('click', function () {
+                  enable(); render();
+                });
+                setInputEnabled(false);
+              } else if (perm === 'default') {
+                box.innerHTML = '<button type="button" class="b-btn">Enable Notifications</button>';
+                box.querySelector('button').addEventListener('click', function () {
                   requestPermission().then(render);
                 });
-              } else if (perm === 'granted') {
-                ui.innerHTML = '<span style="color: var(--ok);">✓ granted</span> &nbsp;<button type="button" class="b-btn">Send test notification</button>';
-                ui.querySelector('button').addEventListener('click', sendTest);
+                setInputEnabled(false);
               } else {
-                ui.innerHTML = '<span style="color: var(--warn);">⚠ blocked</span> <span class="dimmer" style="font-size: var(--fs-12); margin-left: 6px;">Enable in your browser\'s site settings.</span>';
+                box.innerHTML = '<span style="color: var(--warn);">⚠ blocked</span> <span class="dimmer" style="font-size: var(--fs-12); margin-left: 6px;">Enable in your browser\'s site settings.</span>';
+                setInputEnabled(false);
               }
             }
             render();

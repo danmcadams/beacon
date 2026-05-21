@@ -1,3 +1,4 @@
+const DISABLED_KEY = 'beacon.notifications.off';
 const timers = new Map();
 
 function todayAt(hhmm) {
@@ -24,6 +25,7 @@ function reschedule() {
   clearAll();
   const el = document.getElementById('rail-now');
   if (!el || Notification.permission !== 'granted') return;
+  if (localStorage.getItem(DISABLED_KEY)) return;
   const schedule = JSON.parse(el.dataset.schedule || '[]');
   const leads    = JSON.parse(el.dataset.leads || '[]');
   const now = Date.now();
@@ -45,6 +47,20 @@ document.addEventListener('DOMContentLoaded', reschedule);
 
 export function requestPermission() {
   return Notification.requestPermission().then(reschedule);
+}
+
+export function isDisabled() {
+  return !!localStorage.getItem(DISABLED_KEY);
+}
+
+export function disable() {
+  localStorage.setItem(DISABLED_KEY, '1');
+  clearAll();
+}
+
+export function enable() {
+  localStorage.removeItem(DISABLED_KEY);
+  reschedule();
 }
 
 export function sendTest() {
