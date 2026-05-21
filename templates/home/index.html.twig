@@ -89,10 +89,10 @@
           stack.classList.toggle('project-stack--hide-tickets', !show);
           btn.textContent = show ? 'Hide Jira Tickets' : 'Show Jira Tickets';
         }
-        apply(sessionStorage.getItem(KEY) === '1');
+        apply(localStorage.getItem(KEY) === '1');
         btn.addEventListener('click', function () {
           var show = stack.classList.contains('project-stack--hide-tickets');
-          sessionStorage.setItem(KEY, show ? '1' : '0');
+          localStorage.setItem(KEY, show ? '1' : '0');
           apply(show);
         });
       })();
