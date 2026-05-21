@@ -14,4 +14,14 @@
       <span style="color: var(--ok); font-size: var(--fs-12);">✓ saved</span>
     </div>
   </div>
+
+  <div class="settings-field" style="margin-top: 14px;">
+    <label class="settings-field__label" for="notification_leads">Lead-time alerts</label>
+    <p class="dimmer" style="font-size: var(--fs-12); margin: 4px 0 8px;">
+      Minutes before a block to fire a browser notification. Enter comma-separated values (e.g. <code class="settings-code">15, 10, 5</code>). Leave blank to disable. Max 6 values, each between 1–240.
+    </p>
+    <input class="settings-input" type="text" name="notification_leads"
+           id="notification_leads" value="{{ notification_leads }}"
+           placeholder="15, 10, 5" style="width: 180px;">
+  </div>
 </form>

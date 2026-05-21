@@ -82,7 +82,44 @@
               <button type="submit" class="b-btn b-btn--primary">Save</button>
             </div>
           </div>
+
+          <div class="settings-field" style="margin-top: 14px;">
+            <label class="settings-field__label" for="notification_leads">Lead-time alerts</label>
+            <p class="dimmer" style="font-size: var(--fs-12); margin: 4px 0 8px;">
+              Minutes before a block to fire a browser notification. Enter comma-separated values (e.g. <code class="settings-code">15, 10, 5</code>). Leave blank to disable. Max 6 values, each between 1–240.
+            </p>
+            <input class="settings-input" type="text" name="notification_leads"
+                   id="notification_leads" value="{{ notification_leads }}"
+                   placeholder="15, 10, 5" style="width: 180px;">
+          </div>
         </form>
+
+        <div class="settings-field" id="notif-permission-row" style="margin-top: 14px;">
+          <span class="settings-field__label">Browser notifications</span>
+          <div id="notif-permission-ui" style="margin-top: 6px;"></div>
+        </div>
+        <script type="module">
+          import { requestPermission, sendTest } from 'notifications';
+          (function () {
+            var ui = document.getElementById('notif-permission-ui');
+            if (!ui || !('Notification' in window)) return;
+            function render() {
+              var perm = Notification.permission;
+              if (perm === 'default') {
+                ui.innerHTML = '<button type="button" class="b-btn">Enable notifications</button>';
+                ui.querySelector('button').addEventListener('click', function () {
+                  requestPermission().then(render);
+                });
+              } else if (perm === 'granted') {
+                ui.innerHTML = '<span style="color: var(--ok);">✓ granted</span> &nbsp;<button type="button" class="b-btn">Send test notification</button>';
+                ui.querySelector('button').addEventListener('click', sendTest);
+              } else {
+                ui.innerHTML = '<span style="color: var(--warn);">⚠ blocked</span> <span class="dimmer" style="font-size: var(--fs-12); margin-left: 6px;">Enable in your browser\'s site settings.</span>';
+              }
+            }
+            render();
+          })();
+        </script>
       </div>
     </section>
 
