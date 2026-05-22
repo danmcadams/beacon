@@ -4,6 +4,7 @@ import './project-reorder.js';
 import './schedule.js';
 import './schedule-wizard.js';
 import './nav-keys.js';
+import 'notifications';
 
 const root   = document.getElementById('root');
 const toggle = document.getElementById('theme-toggle');

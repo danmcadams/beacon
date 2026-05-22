@@ -16,6 +16,9 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
+    'notifications' => [
+        'path' => './assets/notifications.js',
+    ],
     'htmx.org' => [
         'version' => '2.0.10',
     ],
