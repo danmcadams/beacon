@@ -58,8 +58,18 @@ final class HomeController extends AbstractController
     }
 
     #[Route('/rail/now', name: 'home_rail_now', methods: ['GET'])]
-    public function railNow(): Response
+    public function railNow(\Symfony\Component\HttpFoundation\Request $request): Response
     {
+        $since = $request->query->get('since', '');
+        $latest = $this->briefings->findMostRecent();
+        $latestAt = $latest?->getGeneratedAt()->format(\DateTimeInterface::ATOM) ?? '';
+
+        if ($since !== '' && $since !== $latestAt) {
+            $response = new Response('', Response::HTTP_NO_CONTENT);
+            $response->headers->set('HX-Refresh', 'true');
+            return $response;
+        }
+
         $now = $this->clock->now();
         $schedule = $this->buildScheduleView(
             $this->blocks->findForDay((int) $now->format('N')),
@@ -68,6 +78,7 @@ final class HomeController extends AbstractController
 
         return $this->render('home/_rail-now.html.twig', [
             'schedule' => $schedule['blocks'],
+            'briefing_snapshot_at' => $since,
             'now' => [
                 'day_label' => $now->format('l'),
                 'date_label' => $now->format('D M j'),
@@ -99,10 +110,14 @@ final class HomeController extends AbstractController
             $now,
         );
 
+        $latest = $this->briefings->findMostRecent();
+        $latestAt = $latest?->getGeneratedAt()->format(\DateTimeInterface::ATOM) ?? '';
+
         return $this->render('home/index.html.twig', [
             'projects' => $projectViews,
             'total_hours' => $totalHours,
             'schedule' => $schedule['blocks'],
+            'briefing_snapshot_at' => $latestAt,
             'now' => [
                 'day_label' => $now->format('l'),
                 'date_label' => $now->format('D M j'),

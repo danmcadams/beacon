@@ -1,5 +1,5 @@
 <div id="rail-now"
-     hx-get="{{ path('home_rail_now') }}"
+     hx-get="{{ path('home_rail_now', { since: briefing_snapshot_at|default('') }) }}"
      hx-trigger="rail-tick from:body"
      hx-target="this"
      hx-swap="outerHTML">
