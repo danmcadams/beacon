@@ -7,7 +7,6 @@ namespace App\Controller;
 use App\Entity\Briefing;
 use App\Entity\Project;
 use App\Entity\ScheduleBlock;
-use App\Repository\AppSettingsRepository;
 use App\Repository\BriefingRepository;
 use App\Repository\JiraTicketRepository;
 use App\Repository\ProjectRepository;
@@ -27,7 +26,6 @@ final class HomeController extends AbstractController
         private readonly BriefingRepository $briefings,
         private readonly MarkdownExtension $markdown,
         private readonly ClockService $clock,
-        private readonly AppSettingsRepository $appSettings,
     ) {
     }
 
@@ -68,15 +66,8 @@ final class HomeController extends AbstractController
             $now,
         );
 
-        $leads = $this->appSettings->getSettings()->getNotificationLeadMinutes();
-
         return $this->render('home/_rail-now.html.twig', [
             'schedule' => $schedule['blocks'],
-            'schedule_json' => json_encode(array_map(
-                fn (array $b) => ['start' => $b['start'], 'label' => $b['label']],
-                $schedule['blocks'],
-            )),
-            'leads_json' => json_encode($leads),
             'now' => [
                 'day_label' => $now->format('l'),
                 'date_label' => $now->format('D M j'),
@@ -108,17 +99,10 @@ final class HomeController extends AbstractController
             $now,
         );
 
-        $leads = $this->appSettings->getSettings()->getNotificationLeadMinutes();
-
         return $this->render('home/index.html.twig', [
             'projects' => $projectViews,
             'total_hours' => $totalHours,
             'schedule' => $schedule['blocks'],
-            'schedule_json' => json_encode(array_map(
-                fn (array $b) => ['start' => $b['start'], 'label' => $b['label']],
-                $schedule['blocks'],
-            )),
-            'leads_json' => json_encode($leads),
             'now' => [
                 'day_label' => $now->format('l'),
                 'date_label' => $now->format('D M j'),

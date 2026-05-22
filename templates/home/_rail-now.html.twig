@@ -2,9 +2,7 @@
      hx-get="{{ path('home_rail_now') }}"
      hx-trigger="rail-tick from:body"
      hx-target="this"
-     hx-swap="outerHTML"
-     data-schedule="{{ schedule_json|e('html_attr') }}"
-     data-leads="{{ leads_json|e('html_attr') }}">
+     hx-swap="outerHTML">
   <div class="rail-block">
     <span class="rail-block__kicker">today</span>
     <span class="rail-block__day">{{ now.day_label }}</span>

@@ -23,11 +23,13 @@ function clearAll() {
 
 function reschedule() {
   clearAll();
-  const el = document.getElementById('rail-now');
+  const el = document.getElementById('notif-data');
   if (!el || Notification.permission !== 'granted') return;
   if (localStorage.getItem(DISABLED_KEY)) return;
-  const schedule = JSON.parse(el.dataset.schedule || '[]');
-  const leads    = JSON.parse(el.dataset.leads || '[]');
+  let data;
+  try { data = JSON.parse(el.textContent || '{}'); } catch { return; }
+  const schedule = data.schedule || [];
+  const leads    = data.leads || [];
   const now = Date.now();
   for (const block of schedule) {
     for (const lead of leads) {
@@ -40,9 +42,6 @@ function reschedule() {
   }
 }
 
-document.body.addEventListener('htmx:afterSwap', e => {
-  if (e.detail.target.id === 'rail-now') reschedule();
-});
 document.addEventListener('DOMContentLoaded', reschedule);
 
 export function requestPermission() {

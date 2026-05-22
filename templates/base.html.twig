@@ -12,6 +12,7 @@
         {% endblock %}
     </head>
     <body>
+        <script id="notif-data" type="application/json">{{ notification_data_json() }}</script>
         {% block body %}{% endblock %}
     </body>
 </html>
