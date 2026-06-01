@@ -1,4 +1,4 @@
-# Beacon
+# <img src="public/favicon.svg" alt="" width="28" height="28" valign="middle"> Beacon
 
 Local-only personal dashboard: cron-generated AI briefings, a Jira ticket cache, a weekly schedule, and projects with quick links.
 
