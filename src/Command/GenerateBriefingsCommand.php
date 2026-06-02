@@ -33,6 +33,7 @@ final class GenerateBriefingsCommand extends Command
         private readonly JiraTicketRepository $tickets,
         private readonly BriefingGeneratorInterface $generator,
         private readonly EntityManagerInterface $em,
+        private readonly \App\Service\ClockService $clock,
     ) {
         parent::__construct();
     }
@@ -187,8 +188,15 @@ final class GenerateBriefingsCommand extends Command
             );
         }
 
+        $now = $this->clock->now();
         $bullets = array_map(
-            static fn (JiraTicket $t) => sprintf('- `%s` — %s _(%s)_', $t->getTicketKey(), $t->getSummary(), $t->getPriority() ?? 'no priority'),
+            static fn (JiraTicket $t) => sprintf(
+                '- `%s` — %s _(%s)_%s',
+                $t->getTicketKey(),
+                $t->getSummary(),
+                $t->getPriority() ?? 'no priority',
+                $t->isNewAsOf($now) ? ' **[new]**' : '',
+            ),
             $tickets,
         );
 
@@ -202,16 +210,19 @@ final class GenerateBriefingsCommand extends Command
 
     /**
      * @param list<JiraTicket> $tickets
-     * @return list<array{key: string, summary: string, priority: ?string, status: string}>
+     * @return list<array{key: string, summary: string, priority: ?string, status: string, is_new: bool}>
      */
     private function snapshotTickets(array $tickets): array
     {
+        $now = $this->clock->now();
+
         return array_map(
             static fn (JiraTicket $t) => [
                 'key' => $t->getTicketKey(),
                 'summary' => $t->getSummary(),
                 'priority' => $t->getPriority(),
                 'status' => $t->getStatus(),
+                'is_new' => $t->isNewAsOf($now),
             ],
             $tickets,
         );
