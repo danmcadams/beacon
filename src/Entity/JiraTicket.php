@@ -13,6 +13,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_project_ticket_key', columns: ['project_id', 'ticket_key'])]
 class JiraTicket
 {
+    /** A ticket counts as "new" for this many hours after it first appears in the cache (72h covers a Fri→Mon weekend gap). */
+    public const int NEW_WINDOW_HOURS = 72;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -53,6 +56,10 @@ class JiraTicket
     #[ORM\Column]
     private \DateTimeImmutable $fetchedAt;
 
+    /** Set once, when the ticket first enters the cache; never overwritten on refresh. Null for rows that predate this column. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $firstSeenAt = null;
+
     public function getId(): ?int { return $this->id; }
 
     public function getProject(): Project { return $this->project; }
@@ -89,4 +96,16 @@ class JiraTicket
 
     public function getFetchedAt(): \DateTimeImmutable { return $this->fetchedAt; }
     public function setFetchedAt(\DateTimeImmutable $v): self { $this->fetchedAt = $v; return $this; }
+
+    public function getFirstSeenAt(): ?\DateTimeImmutable { return $this->firstSeenAt; }
+    public function setFirstSeenAt(?\DateTimeImmutable $v): self { $this->firstSeenAt = $v; return $this; }
+
+    public function isNewAsOf(\DateTimeImmutable $now): bool
+    {
+        if ($this->firstSeenAt === null) {
+            return false;
+        }
+
+        return $this->firstSeenAt > $now->modify(sprintf('-%d hours', self::NEW_WINDOW_HOURS));
+    }
 }

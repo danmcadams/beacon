@@ -54,6 +54,7 @@ final class JiraTicketRefresher
                 ->setFetchedAt($now);
 
             if ($existing === null) {
+                $ticket->setFirstSeenAt($now);
                 $this->em->persist($ticket);
                 ++$created;
             } else {

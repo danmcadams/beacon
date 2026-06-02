@@ -9,10 +9,13 @@
     {% endif %}
   </div>
   {% for ticket in project.tickets %}
-    <div class="project-card__ticket-row">
-      <a class="project-card__ticket-key"
-         href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
-         target="_blank" rel="noopener">{{ ticket.key }}</a>
+    <div class="project-card__ticket-row{% if ticket.is_new %} project-card__ticket-row--new{% endif %}">
+      <span class="project-card__ticket-keycell">
+        <a class="project-card__ticket-key"
+           href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
+           target="_blank" rel="noopener">{{ ticket.key }}</a>
+        {% if ticket.is_new %}<span class="ticket-new-badge">new</span>{% endif %}
+      </span>
       <span class="project-card__ticket-summary">{{ ticket.summary }}</span>
       <span class="project-card__ticket-status {% if ticket.status == 'In Progress' %}ticket-status--active{% elseif ticket.status == 'Blocked' %}ticket-status--blocked{% else %}ticket-status--neutral{% endif %}">{{ ticket.status }}</span>
     </div>

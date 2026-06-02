@@ -39,7 +39,7 @@ final class HomeController extends AbstractController
         $yesterdayBriefings = $this->indexBriefingsByProject($this->briefings->findForDate($yesterday));
 
         $projectViews = array_map(
-            fn (Project $p) => $this->buildProjectView($p, $yesterdayBriefings[$p->getId()] ?? null),
+            fn (Project $p) => $this->buildProjectView($p, $yesterdayBriefings[$p->getId()] ?? null, $now),
             $projects,
         );
 
@@ -99,7 +99,7 @@ final class HomeController extends AbstractController
         $todaysBriefings = $this->indexBriefingsByProject($this->briefings->findForDate($today));
 
         $projectViews = array_map(
-            fn (Project $p) => $this->buildProjectView($p, $todaysBriefings[$p->getId()] ?? null),
+            fn (Project $p) => $this->buildProjectView($p, $todaysBriefings[$p->getId()] ?? null, $now),
             $projects,
         );
 
@@ -134,10 +134,10 @@ final class HomeController extends AbstractController
      * @return array{
      *     name: string, slug: string, color: string, hours: float, ticket_count: int,
      *     briefing_status: string, briefing_html: string,
-     *     tickets: list<array{key: string, summary: string, priority: ?string}>
+     *     tickets: list<array{key: string, summary: string, priority: ?string, is_new: bool}>
      * }
      */
-    private function buildProjectView(Project $p, ?Briefing $briefing): array
+    private function buildProjectView(Project $p, ?Briefing $briefing, \DateTimeImmutable $now): array
     {
         $tickets = $this->tickets->findForProject($p);
 
@@ -159,6 +159,7 @@ final class HomeController extends AbstractController
                     'summary' => $t->getSummary(),
                     'priority' => $t->getPriority(),
                     'status' => $t->getStatus(),
+                    'is_new' => $t->isNewAsOf($now),
                 ],
                 \array_slice($tickets, 0, 5),
             ),

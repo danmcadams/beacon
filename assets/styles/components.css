@@ -614,6 +614,34 @@
 .ticket-status--blocked { color: var(--err); }
 .ticket-status--neutral { color: var(--fg-3); }
 
+/* ── "new" ticket highlight (recently assigned) ─────────────── */
+
+.project-card__ticket-keycell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.ticket-new-badge {
+  font-family: var(--mono);
+  font-size: var(--fs-12);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  border-radius: 999px;
+  padding: 0 6px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.project-card__ticket-row--new .project-card__ticket-key { color: var(--accent); }
+.proj-tickets__row--new { background: color-mix(in oklab, var(--accent) 7%, transparent); }
+.proj-tickets__table tbody tr.proj-tickets__row--new:hover {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
 /* ── Inline ticket key (in briefing markdown) ───────────────── */
 
 .ticket-key {
