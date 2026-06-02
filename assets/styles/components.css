@@ -622,6 +622,8 @@
   gap: 6px;
   white-space: nowrap;
 }
+/* Right-align the badge to the key column edge so badges line up across rows of varying key length. */
+.project-card__ticket-keycell .ticket-new-badge { margin-left: auto; }
 
 .ticket-new-badge {
   font-family: var(--mono);
@@ -637,6 +639,15 @@
 }
 
 .project-card__ticket-row--new .project-card__ticket-key { color: var(--accent); }
+
+/* Key + badge cell in the detail table: badge right-aligns to the key column edge so badges line up. */
+.proj-tickets__keycell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.proj-tickets__keycell .ticket-new-badge { margin-left: auto; }
+
 .proj-tickets__row--new { background: color-mix(in oklab, var(--accent) 7%, transparent); }
 .proj-tickets__table tbody tr.proj-tickets__row--new:hover {
   background: color-mix(in oklab, var(--accent) 12%, transparent);
