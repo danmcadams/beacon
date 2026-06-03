@@ -19,11 +19,12 @@
         </thead>
         <tbody>
           {% for ticket in tickets %}
-            <tr>
-              <td>
+            <tr{% if ticket.is_new %} class="proj-tickets__row--new"{% endif %}>
+              <td class="proj-tickets__keycell">
                 <a class="proj-tickets__key"
                    href="{{ project.jira_base_url }}/browse/{{ ticket.key }}"
                    target="_blank" rel="noopener">{{ ticket.key }}</a>
+                {% if ticket.is_new %}<span class="ticket-new-badge">new</span>{% endif %}
               </td>
               <td>{{ ticket.summary }}</td>
               <td>

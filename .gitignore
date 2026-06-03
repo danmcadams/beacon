@@ -13,3 +13,6 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Claude Code local overrides (personal; shared settings.json may be committed)
+/.claude/settings.local.json

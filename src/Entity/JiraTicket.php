@@ -13,6 +13,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_project_ticket_key', columns: ['project_id', 'ticket_key'])]
 class JiraTicket
 {
+    /** A ticket counts as "new" for this many hours after it was created in Jira (72h covers a Fri→Mon weekend gap). */
+    public const int NEW_WINDOW_HOURS = 72;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -46,12 +49,20 @@ class JiraTicket
     #[ORM\Column]
     private \DateTimeImmutable $jiraUpdatedAt;
 
+    /** From Jira's `created` field; drives the "new" highlight. Null for rows fetched before this field was captured. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $jiraCreatedAt = null;
+
     /** @var array<string, mixed> */
     #[ORM\Column(type: Types::JSON)]
     private array $rawJson = [];
 
     #[ORM\Column]
     private \DateTimeImmutable $fetchedAt;
+
+    /** Set once, when the ticket first enters the cache; never overwritten on refresh. Null for rows that predate this column. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $firstSeenAt = null;
 
     public function getId(): ?int { return $this->id; }
 
@@ -82,6 +93,9 @@ class JiraTicket
     public function getJiraUpdatedAt(): \DateTimeImmutable { return $this->jiraUpdatedAt; }
     public function setJiraUpdatedAt(\DateTimeImmutable $v): self { $this->jiraUpdatedAt = $v; return $this; }
 
+    public function getJiraCreatedAt(): ?\DateTimeImmutable { return $this->jiraCreatedAt; }
+    public function setJiraCreatedAt(?\DateTimeImmutable $v): self { $this->jiraCreatedAt = $v; return $this; }
+
     /** @return array<string, mixed> */
     public function getRawJson(): array { return $this->rawJson; }
     /** @param array<string, mixed> $v */
@@ -89,4 +103,16 @@ class JiraTicket
 
     public function getFetchedAt(): \DateTimeImmutable { return $this->fetchedAt; }
     public function setFetchedAt(\DateTimeImmutable $v): self { $this->fetchedAt = $v; return $this; }
+
+    public function getFirstSeenAt(): ?\DateTimeImmutable { return $this->firstSeenAt; }
+    public function setFirstSeenAt(?\DateTimeImmutable $v): self { $this->firstSeenAt = $v; return $this; }
+
+    public function isNewAsOf(\DateTimeImmutable $now): bool
+    {
+        if ($this->jiraCreatedAt === null) {
+            return false;
+        }
+
+        return $this->jiraCreatedAt > $now->modify(sprintf('-%d hours', self::NEW_WINDOW_HOURS));
+    }
 }

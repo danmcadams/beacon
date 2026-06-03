@@ -21,17 +21,23 @@ Style:
 - Bold a key action sparingly with **double asterisks**.
 - Don't preamble ("Today's briefing", "Here is", "Based on the tickets") — get to the point.
 - Don't list every ticket — that's already on the page. Pick what matters and say why.
+- If a ticket is flagged NEW, it was assigned to you in the last few days — call it out explicitly so it doesn't slip by ("Heads up — `LR-412` just landed on your plate"). Lead with it unless something more urgent is in flight.
 - If a ticket is blocked, say so and tell the user to skip it.
 - If the day looks light, say so. Don't manufacture urgency.
 
 Tone: direct, calm, like a sharp peer giving a stand-up update. No corporate-speak.
 TXT;
 
+    public function __construct(private readonly ClockService $clock)
+    {
+    }
+
     /**
      * @param list<JiraTicket> $tickets
      */
     public function buildUserPrompt(Project $project, array $tickets): string
     {
+        $now = $this->clock->now();
         $header = sprintf(
             "Project: %s\nDaily hour target: %.1fh",
             $project->getName(),
@@ -54,18 +60,34 @@ TXT;
 
         $ticketLines = array_map(
             static fn (JiraTicket $t) => sprintf(
-                '- %s [%s, priority=%s]: %s',
+                '- %s [%s, priority=%s%s]: %s',
                 $t->getTicketKey(),
                 $t->getStatus(),
                 $t->getPriority() ?? '—',
+                $t->isNewAsOf($now) ? ', NEW' : '',
                 $t->getSummary(),
             ),
             $tickets,
         );
 
+        $newKeys = array_map(
+            static fn (JiraTicket $t) => $t->getTicketKey(),
+            array_values(array_filter($tickets, static fn (JiraTicket $t) => $t->isNewAsOf($now))),
+        );
+
+        $callout = '';
+        if ($newKeys !== []) {
+            $callout = sprintf(
+                "\n\nNewly assigned to you in the last %d days (flag these): %s.",
+                intdiv(JiraTicket::NEW_WINDOW_HOURS, 24),
+                implode(', ', $newKeys),
+            );
+        }
+
         return $header
             . "\n\nTickets currently in this project's queue:\n"
             . implode("\n", $ticketLines)
+            . $callout
             . "\n\nWrite the briefing.";
     }
 }

@@ -145,6 +145,7 @@ final class ProjectController extends AbstractController
                 'key' => $t->getTicketKey(),
                 'summary' => $t->getSummary(),
                 'status' => $t->getStatus(),
+                'is_new' => $t->isNewAsOf($now),
             ], $tickets),
             'ticket_count' => count($tickets),
             'quick_links' => array_map(fn (QuickLink $ql) => [
@@ -175,6 +176,7 @@ final class ProjectController extends AbstractController
                 'summary' => $t->getSummary(),
                 'status' => $t->getStatus(),
                 'priority' => $t->getPriority(),
+                'is_new' => $t->isNewAsOf($now),
             ], \array_slice($tickets, 0, 5)),
         ]);
     }
@@ -206,6 +208,7 @@ final class ProjectController extends AbstractController
                 'key' => $t->getTicketKey(),
                 'summary' => $t->getSummary(),
                 'status' => $t->getStatus(),
+                'is_new' => $t->isNewAsOf($now),
             ], $tickets),
             'ticket_count' => count($tickets),
             'last_refreshed' => $lastRefreshed,

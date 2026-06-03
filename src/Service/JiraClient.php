@@ -8,7 +8,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class JiraClient
 {
-    private const FIELDS = ['summary', 'status', 'priority', 'assignee', 'duedate', 'updated'];
+    private const FIELDS = ['summary', 'status', 'priority', 'assignee', 'duedate', 'updated', 'created'];
 
     private const PAGE_SIZE = 100;
 

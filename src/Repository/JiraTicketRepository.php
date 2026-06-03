@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\JiraTicket;
 use App\Entity\Project;
+use App\Service\ClockService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,7 +15,7 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 final class JiraTicketRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, private readonly ClockService $clock)
     {
         parent::__construct($registry, JiraTicket::class);
     }
@@ -30,15 +31,14 @@ final class JiraTicketRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        usort($tickets, static function (JiraTicket $a, JiraTicket $b): int {
-            $score = static function (JiraTicket $t): int {
-                if ($t->getStatus() === 'In Progress') {
-                    return 0;
-                }
-                if ($t->getStatusCategory() === 'In Progress') {
-                    return 1;
-                }
-                return 2;
+        $now = $this->clock->now();
+
+        // Stable sort: ties keep the query order (priority, then key).
+        // Ranks: 0 new+in-progress, 1 new+backlog, 2 in-progress, 3 backlog.
+        usort($tickets, static function (JiraTicket $a, JiraTicket $b) use ($now): int {
+            $score = static function (JiraTicket $t) use ($now): int {
+                $inProgress = $t->getStatus() === 'In Progress' || $t->getStatusCategory() === 'In Progress';
+                return ($t->isNewAsOf($now) ? 0 : 2) + ($inProgress ? 0 : 1);
             };
             return $score($a) <=> $score($b);
         });
