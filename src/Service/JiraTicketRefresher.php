@@ -50,6 +50,7 @@ final class JiraTicketRefresher
                 ->setAssignee(isset($fields['assignee']['displayName']) ? (string) $fields['assignee']['displayName'] : null)
                 ->setDueDate($this->parseDate($fields['duedate'] ?? null))
                 ->setJiraUpdatedAt($this->parseDateTime($fields['updated'] ?? null) ?? $now)
+                ->setJiraCreatedAt($this->parseDateTime($fields['created'] ?? null))
                 ->setRawJson($issue)
                 ->setFetchedAt($now);
 
