@@ -167,7 +167,8 @@ If a Symfony 7.4-specific pattern is ambiguous, fetch the version-pinned docs fr
 
 ## Hard don'ts
 
-- No real Claude API or Jira calls — credentials aren't wired yet.
+- Jira credentials are wired. The ticket refresh (`RefreshJiraTicketsCommand` / the refresh-tickets routes) is read-only against Jira — safe to run. Don't make *write* calls to Jira.
+- Claude credentials are wired too (the briefing cron generates real output via the `claude` CLI). Don't trigger ad-hoc briefing generation just to test — it burns tokens. Use `app:briefing:generate --stub` for that, and target a throwaway `--date` so you never overwrite a real briefing.
 - Never read `.env.local` — it's user-only, even to verify wiring.
 - No `/doc/current/` Symfony docs — use `/doc/7.4/`.
 - No `docker compose` (v2) — use `docker-compose` (v1).
