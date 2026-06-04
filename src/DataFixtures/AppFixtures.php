@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DataFixtures;
 
 use App\Entity\Briefing;
+use App\Entity\JiraBoard;
 use App\Entity\JiraTicket;
 use App\Entity\Project;
 use App\Entity\QuickLink;
@@ -90,6 +91,12 @@ MD);
             ->setSortOrder($sortOrder)
             ->setJiraBaseUrl($jiraUrl)
             ->setJiraBoardId($boardId);
+
+        $p->addBoard(
+            (new JiraBoard())
+                ->setProjectKey($boardId)
+                ->setSortOrder(0),
+        );
 
         return $p;
     }

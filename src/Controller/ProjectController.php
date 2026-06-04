@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\JiraBoard;
 use App\Entity\JiraTicket;
 use App\Entity\Project;
 use App\Entity\QuickLink;
@@ -308,6 +309,17 @@ final class ProjectController extends AbstractController
                 $project->setJiraBaseUrl($jiraBaseUrl);
                 $project->setJiraBoardId($jiraBoardId);
                 $project->setJiraJqlFilter($jiraJql !== '' ? $jiraJql : null);
+
+                // Keep the single board row in sync with the legacy fields while the UI is single-board.
+                $board = $project->getPrimaryBoard();
+                if ($board === null) {
+                    $board = new JiraBoard();
+                    $project->addBoard($board);
+                    $this->em->persist($board);
+                }
+                $board->setProjectKey($jiraBoardId)
+                    ->setJqlFilter($jiraJql !== '' ? $jiraJql : null);
+
                 $project->setBriefingContext($briefingContext !== '' ? $briefingContext : null);
                 $project->setDailyHoursTarget($hours);
 

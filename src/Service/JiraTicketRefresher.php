@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\JiraBoard;
 use App\Entity\JiraTicket;
 use App\Entity\Project;
 use App\Repository\JiraTicketRepository;
@@ -23,68 +24,73 @@ final class JiraTicketRefresher
      */
     public function refresh(Project $project): array
     {
-        $jql = $this->resolveJql($project);
-        $issues = $this->jira->searchIssues($project->getJiraBaseUrl(), $jql);
-
         $now = new \DateTimeImmutable();
         $seenKeys = [];
+        $fetched = 0;
         $created = 0;
         $updated = 0;
 
-        foreach ($issues as $issue) {
-            $key = (string) ($issue['key'] ?? '');
-            if ($key === '') {
-                continue;
-            }
-            $seenKeys[] = $key;
+        foreach ($project->getBoards() as $board) {
+            $issues = $this->jira->searchIssues($project->getJiraBaseUrl(), $this->resolveJql($board));
+            $fetched += \count($issues);
 
-            $existing = $this->repo->findOneByProjectAndKey($project, $key);
-            $ticket = $existing ?? (new JiraTicket())->setProject($project)->setTicketKey($key);
+            foreach ($issues as $issue) {
+                $key = (string) ($issue['key'] ?? '');
+                if ($key === '') {
+                    continue;
+                }
+                $seenKeys[] = $key;
 
-            $fields = $issue['fields'] ?? [];
-            $ticket
-                ->setSummary((string) ($fields['summary'] ?? ''))
-                ->setStatus((string) ($fields['status']['name'] ?? 'Unknown'))
-                ->setStatusCategory((string) ($fields['status']['statusCategory']['name'] ?? 'To Do'))
-                ->setPriority(isset($fields['priority']['name']) ? (string) $fields['priority']['name'] : null)
-                ->setAssignee(isset($fields['assignee']['displayName']) ? (string) $fields['assignee']['displayName'] : null)
-                ->setDueDate($this->parseDate($fields['duedate'] ?? null))
-                ->setJiraUpdatedAt($this->parseDateTime($fields['updated'] ?? null) ?? $now)
-                ->setJiraCreatedAt($this->parseDateTime($fields['created'] ?? null))
-                ->setRawJson($issue)
-                ->setFetchedAt($now);
+                $existing = $this->repo->findOneByProjectAndKey($project, $key);
+                $ticket = $existing ?? (new JiraTicket())->setProject($project)->setTicketKey($key);
 
-            if ($existing === null) {
-                $ticket->setFirstSeenAt($now);
-                $this->em->persist($ticket);
-                ++$created;
-            } else {
-                ++$updated;
+                $fields = $issue['fields'] ?? [];
+                $ticket
+                    ->setBoard($board)
+                    ->setSummary((string) ($fields['summary'] ?? ''))
+                    ->setStatus((string) ($fields['status']['name'] ?? 'Unknown'))
+                    ->setStatusCategory((string) ($fields['status']['statusCategory']['name'] ?? 'To Do'))
+                    ->setPriority(isset($fields['priority']['name']) ? (string) $fields['priority']['name'] : null)
+                    ->setAssignee(isset($fields['assignee']['displayName']) ? (string) $fields['assignee']['displayName'] : null)
+                    ->setDueDate($this->parseDate($fields['duedate'] ?? null))
+                    ->setJiraUpdatedAt($this->parseDateTime($fields['updated'] ?? null) ?? $now)
+                    ->setJiraCreatedAt($this->parseDateTime($fields['created'] ?? null))
+                    ->setRawJson($issue)
+                    ->setFetchedAt($now);
+
+                if ($existing === null) {
+                    $ticket->setFirstSeenAt($now);
+                    $this->em->persist($ticket);
+                    ++$created;
+                } else {
+                    ++$updated;
+                }
             }
         }
 
+        // Prune only after every board has reported, or one board's results would delete another's tickets.
         $deleted = $this->deleteStale($project, $seenKeys);
 
         $this->em->flush();
 
         return [
-            'fetched' => \count($issues),
+            'fetched' => $fetched,
             'created' => $created,
             'updated' => $updated,
             'deleted' => $deleted,
         ];
     }
 
-    private function resolveJql(Project $project): string
+    private function resolveJql(JiraBoard $board): string
     {
-        $override = $project->getJiraJqlFilter();
+        $override = $board->getJqlFilter();
         if ($override !== null && trim($override) !== '') {
             return $override;
         }
 
         return sprintf(
             'project = "%s" AND assignee = currentUser() AND statusCategory != Done ORDER BY priority DESC, updated DESC',
-            $project->getJiraBoardId(),
+            $board->getProjectKey(),
         );
     }
 

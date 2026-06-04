@@ -62,9 +62,15 @@ class Project
     #[ORM\OrderBy(['sortOrder' => 'ASC'])]
     private Collection $quickLinks;
 
+    /** @var Collection<int, JiraBoard> */
+    #[ORM\OneToMany(targetEntity: JiraBoard::class, mappedBy: 'project', orphanRemoval: true, cascade: ['persist', 'remove'])]
+    #[ORM\OrderBy(['sortOrder' => 'ASC'])]
+    private Collection $boards;
+
     public function __construct()
     {
         $this->quickLinks = new ArrayCollection();
+        $this->boards = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = $this->createdAt;
     }
@@ -112,4 +118,23 @@ class Project
 
     /** @return Collection<int, QuickLink> */
     public function getQuickLinks(): Collection { return $this->quickLinks; }
+
+    /** @return Collection<int, JiraBoard> */
+    public function getBoards(): Collection { return $this->boards; }
+
+    public function addBoard(JiraBoard $board): self
+    {
+        if (!$this->boards->contains($board)) {
+            $board->setProject($this);
+            $this->boards->add($board);
+        }
+
+        return $this;
+    }
+
+    /** The lowest-sorted board, treated as primary while the UI is still single-board. */
+    public function getPrimaryBoard(): ?JiraBoard
+    {
+        return $this->boards->first() ?: null;
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\JiraBoard;
 use App\Entity\Project;
 use App\Entity\QuickLink;
 use App\Service\JiraConnectionTester;
@@ -283,6 +284,13 @@ final class ProjectWizardController extends AbstractController
             ->setJiraBoardId($s['jira']['board_id'])
             ->setJiraJqlFilter($s['jira']['jql_filter'] !== '' ? $s['jira']['jql_filter'] : null)
             ->setDailyHoursTarget((float) $s['hours']['daily_hours_target']);
+
+        $project->addBoard(
+            (new JiraBoard())
+                ->setProjectKey($s['jira']['board_id'])
+                ->setJqlFilter($s['jira']['jql_filter'] !== '' ? $s['jira']['jql_filter'] : null)
+                ->setSortOrder(0),
+        );
 
         foreach ($s['links']['links'] ?? [] as $i => $link) {
             $ql = new QuickLink();
