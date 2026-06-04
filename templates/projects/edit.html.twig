@@ -133,24 +133,58 @@
         <h3 class="proj-edit__section-heading">Jira</h3>
 
         <label class="wiz-field">
-          <span class="wiz-field__label">Jira URL</span>
-          <input class="wiz-input" type="text" name="jira_url" value="{{ form.jira_url }}"
-                 placeholder="https://yourorg.atlassian.net/jira/software/c/projects/KEY/boards/1">
-          <span class="wiz-field__hint">Paste any link from your project — board, backlog, ticket, anything. We'll pull the host and project key out of it.</span>
-          {% if errors.jira_url is defined %}
-            <span class="wiz-field__error">{{ errors.jira_url }}</span>
-          {% elseif form.jira_parsed_host is not empty and form.jira_parsed_key is not empty %}
-            <span class="wiz-field__hint">→ <span class="mono">{{ form.jira_parsed_host }}</span> · <span class="mono">{{ form.jira_parsed_key }}</span></span>
+          <span class="wiz-field__label">Base URL</span>
+          <input class="wiz-input{{ errors.jira_base_url is defined ? ' wiz-input--error' : '' }}" type="text" name="jira_base_url" value="{{ form.jira_base_url }}"
+                 placeholder="https://yourorg.atlassian.net">
+          <span class="wiz-field__hint">The Atlassian host shared by every board on this project.</span>
+          {% if errors.jira_base_url is defined %}
+            <span class="wiz-field__error">{{ errors.jira_base_url }}</span>
           {% endif %}
         </label>
 
+        <div class="wiz-field">
+          <span class="wiz-field__label">Boards</span>
+          <span class="wiz-field__hint">One or more Jira project keys (e.g. <span class="mono">ABC</span>). Paste a board URL and we'll pull the key out. Optional label and per-board JQL override.</span>
+          {% if errors.boards is defined %}
+            <span class="wiz-field__error">{{ errors.boards }}</span>
+          {% endif %}
+        </div>
+
+        <div id="board-rows">
+          {% set boardRows = form.boards is empty ? [{id: '', key: '', label: '', jql: ''}] : form.boards %}
+          {% for i, row in boardRows %}
+            {% set boardError = (errors.board_rows is defined and errors.board_rows[i] is defined) ? errors.board_rows[i] : null %}
+            <div class="board-row">
+              <input type="hidden" name="board_id[]" value="{{ row.id }}">
+              <input class="wiz-input board-row__key{{ boardError ? ' wiz-input--error' : '' }}" type="text" name="board_key[]" placeholder="Project key" value="{{ row.key }}">
+              <input class="wiz-input board-row__label" type="text" name="board_label[]" placeholder="Label (optional)" maxlength="100" value="{{ row.label }}">
+              <input class="wiz-input board-row__jql" type="text" name="board_jql[]" placeholder="JQL override (optional)" value="{{ row.jql }}">
+              <button type="button" class="b-btn board-row__test" data-test-url="{{ path('project_edit_jira_test', { id: project.id }) }}">test</button>
+              <button type="button" class="b-btn b-btn--ghost" onclick="this.closest('.board-row').remove()">−</button>
+            </div>
+            {% if boardError %}
+              <span class="wiz-field__error">{{ boardError }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <template id="board-row-template">
+          <div class="board-row">
+            <input type="hidden" name="board_id[]" value="">
+            <input class="wiz-input board-row__key" type="text" name="board_key[]" placeholder="Project key">
+            <input class="wiz-input board-row__label" type="text" name="board_label[]" placeholder="Label (optional)" maxlength="100">
+            <input class="wiz-input board-row__jql" type="text" name="board_jql[]" placeholder="JQL override (optional)">
+            <button type="button" class="b-btn board-row__test" data-test-url="{{ path('project_edit_jira_test', { id: project.id }) }}">test</button>
+            <button type="button" class="b-btn b-btn--ghost" onclick="this.closest('.board-row').remove()">−</button>
+          </div>
+        </template>
+
+        <button type="button" class="b-btn" onclick="
+          const tpl = document.getElementById('board-row-template');
+          document.getElementById('board-rows').appendChild(tpl.content.cloneNode(true));
+        ">+ add board</button>
+
         <div class="wiz-test">
-          <button type="button"
-                  class="b-btn"
-                  hx-post="{{ path('project_edit_jira_test', { id: project.id }) }}"
-                  hx-include="closest form"
-                  hx-target="#jira-test-result"
-                  hx-swap="outerHTML">↻ test connection</button>
           {% include 'projects/wizard/_jira-test-result.html.twig' with { result: test_result } %}
         </div>
 

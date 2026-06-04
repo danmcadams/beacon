@@ -1108,6 +1108,16 @@ time, .mono-time {
 .wiz-link-row .wiz-input--label { width: 160px; }
 .wiz-link-row .wiz-input--url { flex: 1; }
 
+.board-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.board-row__key { width: 130px; }
+.board-row__label { width: 160px; }
+.board-row__jql { flex: 1; }
+
 .wiz-test {
   display: flex;
   align-items: center;

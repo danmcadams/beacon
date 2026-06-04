@@ -229,8 +229,7 @@ final class ProjectController extends AbstractController
             $description = trim((string) $request->request->get('description', ''));
             $color = trim((string) $request->request->get('color', '#cba6f7'));
             $statusRaw = (string) $request->request->get('status', 'active');
-            $jiraUrl = trim((string) $request->request->get('jira_url', ''));
-            $jiraJql = trim((string) $request->request->get('jira_jql_filter', ''));
+            $jiraBaseUrlInput = trim((string) $request->request->get('jira_base_url', ''));
             $briefingContext = trim((string) $request->request->get('briefing_context', ''));
             $hoursRaw = (string) $request->request->get('daily_hours_target', '0');
             $hours = is_numeric($hoursRaw) ? (float) $hoursRaw : -1.0;
@@ -239,9 +238,8 @@ final class ProjectController extends AbstractController
             $linkLabels = $request->request->all('link_label');
             $linkUrls   = $request->request->all('link_url');
 
-            $parsed = $this->jiraUrlParser->parse($jiraUrl);
-            $jiraBaseUrl = $parsed['base_url'];
-            $jiraBoardId = $parsed['project_key'] ?? '';
+            $jiraBaseUrl = $this->jiraUrlParser->parse($jiraBaseUrlInput)['base_url'];
+            $submittedBoards = $this->readBoardRows($request);
 
             $errors = [];
             if ($name === '') {
@@ -256,10 +254,25 @@ final class ProjectController extends AbstractController
             if ($status === null) {
                 $errors['status'] = 'Invalid status.';
             }
-            if ($jiraUrl === '') {
-                $errors['jira_url'] = 'Jira URL is required.';
-            } elseif ($jiraBaseUrl === '' || $jiraBoardId === '') {
-                $errors['jira_url'] = 'Could not parse a project key from that URL — paste a board, backlog, or project URL.';
+            if ($jiraBaseUrlInput === '') {
+                $errors['jira_base_url'] = 'Jira base URL is required.';
+            } elseif ($jiraBaseUrl === '') {
+                $errors['jira_base_url'] = 'That doesn\'t look like a valid URL (e.g. https://yourorg.atlassian.net).';
+            }
+            $boardErrors = [];
+            foreach ($submittedBoards as $i => $b) {
+                if ($b['key'] === '') {
+                    continue;
+                }
+                if (!preg_match('/^[A-Z][A-Z0-9_]*$/', $b['key'])) {
+                    $boardErrors[$i] = 'Invalid project key — letters, digits, and underscores only.';
+                }
+            }
+            if ($boardErrors !== []) {
+                $errors['board_rows'] = $boardErrors;
+            }
+            if (array_filter($submittedBoards, fn (array $b) => $b['key'] !== '') === []) {
+                $errors['boards'] = 'Add at least one board (a Jira project key).';
             }
             if ($hours < 0 || $hours > 24) {
                 $errors['daily_hours_target'] = 'Daily target must be between 0 and 24.';
@@ -307,18 +320,11 @@ final class ProjectController extends AbstractController
                 $project->setColor($color);
                 $project->setStatus($status);
                 $project->setJiraBaseUrl($jiraBaseUrl);
-                $project->setJiraBoardId($jiraBoardId);
-                $project->setJiraJqlFilter($jiraJql !== '' ? $jiraJql : null);
+                $primary = $this->syncBoards($project, $submittedBoards);
 
-                // Keep the single board row in sync with the legacy fields while the UI is single-board.
-                $board = $project->getPrimaryBoard();
-                if ($board === null) {
-                    $board = new JiraBoard();
-                    $project->addBoard($board);
-                    $this->em->persist($board);
-                }
-                $board->setProjectKey($jiraBoardId)
-                    ->setJqlFilter($jiraJql !== '' ? $jiraJql : null);
+                // Keep the legacy single-board columns mirroring the primary board until they're dropped.
+                $project->setJiraBoardId($primary?->getProjectKey() ?? '');
+                $project->setJiraJqlFilter($primary?->getJqlFilter());
 
                 $project->setBriefingContext($briefingContext !== '' ? $briefingContext : null);
                 $project->setDailyHoursTarget($hours);
@@ -375,10 +381,8 @@ final class ProjectController extends AbstractController
                     'description' => $description,
                     'color' => $color,
                     'status' => $statusRaw,
-                    'jira_url' => $jiraUrl,
-                    'jira_parsed_host' => $jiraBaseUrl,
-                    'jira_parsed_key' => $jiraBoardId,
-                    'jira_jql_filter' => $jiraJql,
+                    'jira_base_url' => $jiraBaseUrlInput,
+                    'boards' => $submittedBoards,
                     'briefing_context' => $briefingContext,
                     'daily_hours_target' => $hours,
                     'links' => $submittedLinks,
@@ -388,8 +392,6 @@ final class ProjectController extends AbstractController
                 'swatch_colors' => $swatchColors,
             ]);
         }
-
-        $reconstructedUrl = sprintf('%s/projects/%s', $project->getJiraBaseUrl(), $project->getJiraBoardId());
 
         $existingLinks = array_map(
             fn (QuickLink $ql) => ['id' => $ql->getId(), 'label' => $ql->getLabel(), 'url' => $ql->getUrl()],
@@ -407,10 +409,16 @@ final class ProjectController extends AbstractController
                 'description' => $project->getDescription() ?? '',
                 'color' => $project->getColor(),
                 'status' => $project->getStatus()->value,
-                'jira_url' => $reconstructedUrl,
-                'jira_parsed_host' => $project->getJiraBaseUrl(),
-                'jira_parsed_key' => $project->getJiraBoardId(),
-                'jira_jql_filter' => $project->getJiraJqlFilter() ?? '',
+                'jira_base_url' => $project->getJiraBaseUrl(),
+                'boards' => array_map(
+                    fn (JiraBoard $b) => [
+                        'id' => $b->getId(),
+                        'key' => $b->getProjectKey(),
+                        'label' => $b->getLabel() ?? '',
+                        'jql' => $b->getJqlFilter() ?? '',
+                    ],
+                    $project->getBoards()->toArray(),
+                ),
                 'briefing_context' => $project->getBriefingContext() ?? '',
                 'daily_hours_target' => $project->getDailyHoursTarget(),
                 'links' => $existingLinks,
@@ -448,18 +456,99 @@ final class ProjectController extends AbstractController
     #[Route('/projects/{id}/edit/jira-test', name: 'project_edit_jira_test', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function editJiraTest(Project $project, Request $request): Response
     {
-        $jiraUrl = trim((string) $request->request->get('jira_url', ''));
-        $jql = trim((string) $request->request->get('jira_jql_filter', ''));
+        $baseUrl = $this->jiraUrlParser->parse(trim((string) $request->request->get('jira_base_url', '')))['base_url'];
 
-        $parsed = $this->jiraUrlParser->parse($jiraUrl);
+        // project-edit.js sends a single row's values, so the key/jql are unambiguous.
+        $rawKey = trim((string) $request->request->get('test_key', ''));
+        if (str_starts_with($rawKey, 'http')) {
+            $rawKey = $this->jiraUrlParser->parse($rawKey)['project_key'] ?? '';
+        }
+        $jql = trim((string) $request->request->get('test_jql', ''));
 
         $result = $this->jiraTester->test(
-            $parsed['base_url'],
-            $parsed['project_key'] ?? '',
+            $baseUrl,
+            strtoupper($rawKey),
             $jql !== '' ? $jql : null,
         );
 
         return $this->render('projects/wizard/_jira-test-result.html.twig', ['result' => $result]);
+    }
+
+    /**
+     * @return list<array{id: string, key: string, label: string, jql: string}>
+     */
+    private function readBoardRows(Request $request): array
+    {
+        $ids    = $request->request->all('board_id');
+        $keys   = $request->request->all('board_key');
+        $labels = $request->request->all('board_label');
+        $jqls   = $request->request->all('board_jql');
+
+        $count = max(\count($ids), \count($keys), \count($labels), \count($jqls));
+        $rows = [];
+        for ($i = 0; $i < $count; $i++) {
+            $rawKey = trim((string) ($keys[$i] ?? ''));
+            if (str_starts_with($rawKey, 'http')) {
+                $rawKey = $this->jiraUrlParser->parse($rawKey)['project_key'] ?? '';
+            }
+            $rows[] = [
+                'id'    => trim((string) ($ids[$i] ?? '')),
+                'key'   => strtoupper($rawKey),
+                'label' => trim((string) ($labels[$i] ?? '')),
+                'jql'   => trim((string) ($jqls[$i] ?? '')),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Reconcile a project's boards against submitted rows: update matched by id, create new, remove missing.
+     * Rows with an empty key are dropped. Returns the primary (first) board, or null if none.
+     *
+     * @param list<array{id: string, key: string, label: string, jql: string}> $submitted
+     */
+    private function syncBoards(Project $project, array $submitted): ?JiraBoard
+    {
+        $rows = array_values(array_filter($submitted, static fn (array $b) => $b['key'] !== ''));
+
+        $existingById = [];
+        foreach ($project->getBoards()->toArray() as $b) {
+            /** @var JiraBoard $b */
+            if ($b->getId() !== null) {
+                $existingById[$b->getId()] = $b;
+            }
+        }
+
+        $kept = [];
+        $primary = null;
+        foreach ($rows as $i => $row) {
+            $id = $row['id'] !== '' ? (int) $row['id'] : null;
+            $board = ($id !== null && isset($existingById[$id])) ? $existingById[$id] : null;
+            if ($board === null) {
+                $board = new JiraBoard();
+                $project->addBoard($board);
+                $this->em->persist($board);
+            }
+            $board->setProjectKey($row['key'])
+                ->setLabel($row['label'] !== '' ? $row['label'] : null)
+                ->setJqlFilter($row['jql'] !== '' ? $row['jql'] : null)
+                ->setSortOrder($i);
+            $kept[spl_object_id($board)] = true;
+            if ($i === 0) {
+                $primary = $board;
+            }
+        }
+
+        foreach ($project->getBoards()->toArray() as $b) {
+            /** @var JiraBoard $b */
+            if (!isset($kept[spl_object_id($b)])) {
+                $project->getBoards()->removeElement($b);
+                $this->em->remove($b);
+            }
+        }
+
+        return $primary;
     }
 
     private function relativeTime(\DateTimeImmutable $then, \DateTimeImmutable $now): string
