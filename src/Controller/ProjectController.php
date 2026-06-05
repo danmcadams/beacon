@@ -448,6 +448,14 @@ final class ProjectController extends AbstractController
     #[Route('/projects/{id}/delete', name: 'project_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(Project $project): Response
     {
+        // Tickets and briefings aren't mapped as cascade collections on Project, and SQLite
+        // FK enforcement is off (kept off so table-rebuild migrations don't cascade-delete),
+        // so remove them explicitly. Quick links and boards cascade via ORM mapping.
+        $this->em->createQuery('DELETE FROM App\Entity\JiraTicket t WHERE t.project = :p')
+            ->setParameter('p', $project)->execute();
+        $this->em->createQuery('DELETE FROM App\Entity\Briefing b WHERE b.project = :p')
+            ->setParameter('p', $project)->execute();
+
         $this->em->remove($project);
         $this->em->flush();
 
@@ -556,6 +564,12 @@ final class ProjectController extends AbstractController
         foreach ($project->getBoards()->toArray() as $b) {
             /** @var JiraBoard $b */
             if (!isset($kept[spl_object_id($b)])) {
+                // FK SET NULL won't fire (enforcement off), so detach tickets from the board
+                // explicitly to avoid dangling board references until the next refresh.
+                if ($b->getId() !== null) {
+                    $this->em->createQuery('UPDATE App\Entity\JiraTicket t SET t.board = NULL WHERE t.board = :b')
+                        ->setParameter('b', $b)->execute();
+                }
                 $project->getBoards()->removeElement($b);
                 $this->em->remove($b);
             }
