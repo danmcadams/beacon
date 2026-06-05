@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\JiraBoard;
 use App\Entity\Project;
 use App\Entity\QuickLink;
 use App\Service\JiraConnectionTester;
@@ -88,27 +89,39 @@ final class ProjectWizardController extends AbstractController
             return $this->redirectToRoute('project_wizard_basics');
         }
 
-        $data = $this->state->step('jira') ?: [
-            'jira_url' => '',
-            'base_url' => '',
-            'board_id' => '',
-            'jql_filter' => '',
-        ];
+        $data = $this->state->step('jira') ?: ['base_url' => '', 'boards' => []];
         $errors = [];
 
         if ($request->isMethod('POST')) {
-            $data = $this->readJiraInput($request);
+            $rawBase = trim((string) $request->request->get('jira_base_url', ''));
+            $normBase = $this->jiraUrls->parse($rawBase)['base_url'];
+            $boards = $this->readBoardRows($request);
 
-            if ($data['jira_url'] === '') {
-                $errors['jira_url'] = 'Paste any URL from your Jira project.';
-            } elseif ($data['base_url'] === '') {
-                $errors['jira_url'] = 'That doesn\'t look like a valid URL.';
-            } elseif ($data['board_id'] === '') {
-                $errors['jira_url'] = 'No project key found in that URL. Paste a link that includes /projects/{KEY}/… or /browse/{KEY}-123.';
+            if ($rawBase === '') {
+                $errors['jira_base_url'] = 'Jira base URL is required.';
+            } elseif ($normBase === '') {
+                $errors['jira_base_url'] = 'That doesn\'t look like a valid URL (e.g. https://yourorg.atlassian.net).';
+            }
+            $boardErrors = [];
+            foreach ($boards as $i => $b) {
+                if ($b['key'] !== '' && !preg_match('/^[A-Z][A-Z0-9_]*$/', $b['key'])) {
+                    $boardErrors[$i] = 'Invalid project key — letters, digits, and underscores only.';
+                }
+            }
+            if ($boardErrors !== []) {
+                $errors['board_rows'] = $boardErrors;
+            }
+            if (array_filter($boards, static fn (array $b) => $b['key'] !== '') === []) {
+                $errors['boards'] = 'Add at least one board (a Jira project key).';
             }
 
+            $data = ['base_url' => $rawBase, 'boards' => $boards];
+
             if ($errors === []) {
-                $this->state->setStep('jira', $data);
+                $this->state->setStep('jira', [
+                    'base_url' => $normBase,
+                    'boards' => array_values(array_filter($boards, static fn (array $b) => $b['key'] !== '')),
+                ]);
 
                 return $this->redirectToRoute('project_wizard_hours');
             }
@@ -125,11 +138,18 @@ final class ProjectWizardController extends AbstractController
     #[Route('/jira/test', name: 'jira_test', methods: ['POST'])]
     public function jiraTest(Request $request): Response
     {
-        $data = $this->readJiraInput($request);
+        $baseUrl = $this->jiraUrls->parse(trim((string) $request->request->get('jira_base_url', '')))['base_url'];
+
+        $rawKey = trim((string) $request->request->get('test_key', ''));
+        if (str_starts_with($rawKey, 'http')) {
+            $rawKey = $this->jiraUrls->parse($rawKey)['project_key'] ?? '';
+        }
+        $jql = trim((string) $request->request->get('test_jql', ''));
+
         $result = $this->jiraTester->test(
-            $data['base_url'],
-            $data['board_id'],
-            $data['jql_filter'] !== '' ? $data['jql_filter'] : null,
+            $baseUrl,
+            strtoupper($rawKey),
+            $jql !== '' ? $jql : null,
         );
 
         return $this->render('projects/wizard/_jira-test-result.html.twig', [
@@ -256,23 +276,41 @@ final class ProjectWizardController extends AbstractController
         return $this->redirectToRoute('home');
     }
 
-    /** @return array{jira_url: string, base_url: string, board_id: string, jql_filter: string} */
-    private function readJiraInput(Request $request): array
+    /**
+     * @return list<array{key: string, label: string, jql: string}>
+     */
+    private function readBoardRows(Request $request): array
     {
-        $jiraUrl = trim((string) $request->request->get('jira_url', ''));
-        $parsed = $this->jiraUrls->parse($jiraUrl);
+        $keys   = $request->request->all('board_key');
+        $labels = $request->request->all('board_label');
+        $jqls   = $request->request->all('board_jql');
 
-        return [
-            'jira_url' => $jiraUrl,
-            'base_url' => $parsed['base_url'],
-            'board_id' => $parsed['project_key'] ?? '',
-            'jql_filter' => trim((string) $request->request->get('jql_filter', '')),
-        ];
+        $count = max(\count($keys), \count($labels), \count($jqls));
+        $rows = [];
+        for ($i = 0; $i < $count; $i++) {
+            $rawKey = trim((string) ($keys[$i] ?? ''));
+            if (str_starts_with($rawKey, 'http')) {
+                $rawKey = $this->jiraUrls->parse($rawKey)['project_key'] ?? '';
+            }
+            $key   = strtoupper($rawKey);
+            $label = trim((string) ($labels[$i] ?? ''));
+            $jql   = trim((string) ($jqls[$i] ?? ''));
+
+            if ($key === '' && $label === '' && $jql === '') {
+                continue;
+            }
+            $rows[] = ['key' => $key, 'label' => $label, 'jql' => $jql];
+        }
+
+        return $rows;
     }
 
     private function createProjectFromState(): Project
     {
         $s = $this->state->all();
+        $boards = $s['jira']['boards'] ?? [];
+        $primary = $boards[0] ?? ['key' => '', 'jql' => ''];
+
         $project = new Project();
         $project
             ->setName($s['basics']['name'])
@@ -280,9 +318,20 @@ final class ProjectWizardController extends AbstractController
             ->setColor($s['basics']['color'])
             ->setSortOrder((int) $s['basics']['sort_order'])
             ->setJiraBaseUrl($s['jira']['base_url'])
-            ->setJiraBoardId($s['jira']['board_id'])
-            ->setJiraJqlFilter($s['jira']['jql_filter'] !== '' ? $s['jira']['jql_filter'] : null)
+            // Legacy single-board columns mirror the primary board until they're dropped.
+            ->setJiraBoardId($primary['key'])
+            ->setJiraJqlFilter(($primary['jql'] ?? '') !== '' ? $primary['jql'] : null)
             ->setDailyHoursTarget((float) $s['hours']['daily_hours_target']);
+
+        foreach ($boards as $i => $b) {
+            $project->addBoard(
+                (new JiraBoard())
+                    ->setProjectKey($b['key'])
+                    ->setLabel(($b['label'] ?? '') !== '' ? $b['label'] : null)
+                    ->setJqlFilter(($b['jql'] ?? '') !== '' ? $b['jql'] : null)
+                    ->setSortOrder($i),
+            );
+        }
 
         foreach ($s['links']['links'] ?? [] as $i => $link) {
             $ql = new QuickLink();

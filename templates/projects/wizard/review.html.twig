@@ -6,8 +6,8 @@
 <pre class="wiz-review">name        = {{ state.basics.name|default('—') }}
 description = {{ state.basics.description|default('—') }}
 color       = {{ state.basics.color|default('—') }}
-jira_url    = {{ state.jira.base_url|default('—') }}
-board_id    = {{ state.jira.board_id|default('—') }}
+base_url    = {{ state.jira.base_url|default('—') }}
+boards      = {{ (state.jira.boards|default([]))|map(b => b.key)|join(', ')|default('—') }}
 hours/day   = {{ state.hours.daily_hours_target|default('—') }}
 links       = {{ linkCount }} configured</pre>
 {% endblock %}

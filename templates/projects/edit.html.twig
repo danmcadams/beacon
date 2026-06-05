@@ -133,24 +133,30 @@
         <h3 class="proj-edit__section-heading">Jira</h3>
 
         <label class="wiz-field">
-          <span class="wiz-field__label">Jira URL</span>
-          <input class="wiz-input" type="text" name="jira_url" value="{{ form.jira_url }}"
-                 placeholder="https://yourorg.atlassian.net/jira/software/c/projects/KEY/boards/1">
-          <span class="wiz-field__hint">Paste any link from your project — board, backlog, ticket, anything. We'll pull the host and project key out of it.</span>
-          {% if errors.jira_url is defined %}
-            <span class="wiz-field__error">{{ errors.jira_url }}</span>
-          {% elseif form.jira_parsed_host is not empty and form.jira_parsed_key is not empty %}
-            <span class="wiz-field__hint">→ <span class="mono">{{ form.jira_parsed_host }}</span> · <span class="mono">{{ form.jira_parsed_key }}</span></span>
+          <span class="wiz-field__label">Base URL</span>
+          <input class="wiz-input{{ errors.jira_base_url is defined ? ' wiz-input--error' : '' }}" type="text" name="jira_base_url" value="{{ form.jira_base_url }}"
+                 placeholder="https://yourorg.atlassian.net">
+          <span class="wiz-field__hint">The Atlassian host shared by every board on this project.</span>
+          {% if errors.jira_base_url is defined %}
+            <span class="wiz-field__error">{{ errors.jira_base_url }}</span>
           {% endif %}
         </label>
 
+        <div class="wiz-field">
+          <span class="wiz-field__label">Boards</span>
+          <span class="wiz-field__hint">One or more Jira project keys (e.g. <span class="mono">ABC</span>). Paste a board URL and we'll pull the key out. Optional label and per-board JQL override.</span>
+          {% if errors.boards is defined %}
+            <span class="wiz-field__error">{{ errors.boards }}</span>
+          {% endif %}
+        </div>
+
+        {% include 'projects/_board-rows.html.twig' with {
+          boards: form.boards,
+          board_errors: errors.board_rows is defined ? errors.board_rows : null,
+          test_url: path('project_edit_jira_test', { id: project.id }),
+        } %}
+
         <div class="wiz-test">
-          <button type="button"
-                  class="b-btn"
-                  hx-post="{{ path('project_edit_jira_test', { id: project.id }) }}"
-                  hx-include="closest form"
-                  hx-target="#jira-test-result"
-                  hx-swap="outerHTML">↻ test connection</button>
           {% include 'projects/wizard/_jira-test-result.html.twig' with { result: test_result } %}
         </div>
 

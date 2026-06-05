@@ -37,7 +37,7 @@ final class JiraTicketRepository extends ServiceEntityRepository
         // Ranks: 0 new+in-progress, 1 new+backlog, 2 in-progress, 3 backlog.
         usort($tickets, static function (JiraTicket $a, JiraTicket $b) use ($now): int {
             $score = static function (JiraTicket $t) use ($now): int {
-                $inProgress = $t->getStatus() === 'In Progress' || $t->getStatusCategory() === 'In Progress';
+                $inProgress = $t->getStatus() === 'In Progress';
                 return ($t->isNewAsOf($now) ? 0 : 2) + ($inProgress ? 0 : 1);
             };
             return $score($a) <=> $score($b);

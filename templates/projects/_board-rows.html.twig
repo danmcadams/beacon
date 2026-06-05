@@ -1,0 +1,34 @@
+{# Repeatable Jira board rows. Params: boards (list of {id?,key,label,jql}), board_errors (optional map by index), test_url. #}
+<div id="board-rows">
+  {% set boardRows = boards is empty ? [{id: '', key: '', label: '', jql: ''}] : boards %}
+  {% for i, row in boardRows %}
+    {% set boardError = (board_errors is defined and board_errors[i] is defined) ? board_errors[i] : null %}
+    <div class="board-row">
+      <input type="hidden" name="board_id[]" value="{{ row.id|default('') }}">
+      <input class="wiz-input board-row__key{{ boardError ? ' wiz-input--error' : '' }}" type="text" name="board_key[]" placeholder="Project key" value="{{ row.key }}">
+      <input class="wiz-input board-row__label" type="text" name="board_label[]" placeholder="Label (optional)" maxlength="100" value="{{ row.label }}">
+      <input class="wiz-input board-row__jql" type="text" name="board_jql[]" placeholder="JQL override (optional)" value="{{ row.jql }}">
+      <button type="button" class="b-btn board-row__test" data-test-url="{{ test_url }}">test</button>
+      <button type="button" class="b-btn b-btn--ghost" onclick="this.closest('.board-row').remove()">−</button>
+    </div>
+    {% if boardError %}
+      <span class="wiz-field__error">{{ boardError }}</span>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<template id="board-row-template">
+  <div class="board-row">
+    <input type="hidden" name="board_id[]" value="">
+    <input class="wiz-input board-row__key" type="text" name="board_key[]" placeholder="Project key">
+    <input class="wiz-input board-row__label" type="text" name="board_label[]" placeholder="Label (optional)" maxlength="100">
+    <input class="wiz-input board-row__jql" type="text" name="board_jql[]" placeholder="JQL override (optional)">
+    <button type="button" class="b-btn board-row__test" data-test-url="{{ test_url }}">test</button>
+    <button type="button" class="b-btn b-btn--ghost" onclick="this.closest('.board-row').remove()">−</button>
+  </div>
+</template>
+
+<button type="button" class="b-btn" onclick="
+  const tpl = document.getElementById('board-row-template');
+  document.getElementById('board-rows').appendChild(tpl.content.cloneNode(true));
+">+ add board</button>

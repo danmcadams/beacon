@@ -25,6 +25,11 @@ class JiraTicket
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Project $project;
 
+    /** The board this ticket came from. Nullable for rows cached before boards existed. */
+    #[ORM\ManyToOne(targetEntity: JiraBoard::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?JiraBoard $board = null;
+
     #[ORM\Column(length: 50)]
     private string $ticketKey;
 
@@ -68,6 +73,9 @@ class JiraTicket
 
     public function getProject(): Project { return $this->project; }
     public function setProject(Project $v): self { $this->project = $v; return $this; }
+
+    public function getBoard(): ?JiraBoard { return $this->board; }
+    public function setBoard(?JiraBoard $v): self { $this->board = $v; return $this; }
 
     public function getTicketKey(): string { return $this->ticketKey; }
     public function setTicketKey(string $v): self { $this->ticketKey = $v; return $this; }
