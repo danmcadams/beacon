@@ -645,6 +645,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
 }
 .proj-tickets__keycell .ticket-new-badge { margin-left: auto; }
 
@@ -1307,6 +1308,17 @@ time, .mono-time {
 
 .proj-tickets__col--key { width: 90px; }
 .proj-tickets__col--status { width: 120px; }
+.proj-tickets__col--board { width: 110px; }
+
+.proj-tickets__board {
+  font-family: var(--mono);
+  font-size: var(--fs-12);
+  color: var(--fg-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
 
 .proj-tickets__key { font-family: var(--mono); color: var(--pc); }
 

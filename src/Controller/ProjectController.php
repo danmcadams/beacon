@@ -147,8 +147,10 @@ final class ProjectController extends AbstractController
                 'summary' => $t->getSummary(),
                 'status' => $t->getStatus(),
                 'is_new' => $t->isNewAsOf($now),
+                'board' => $this->boardName($t->getBoard()),
             ], $tickets),
             'ticket_count' => count($tickets),
+            'show_boards' => $project->getBoards()->count() > 1,
             'quick_links' => array_map(fn (QuickLink $ql) => [
                 'label' => $ql->getLabel(),
                 'url' => $ql->getUrl(),
@@ -210,8 +212,10 @@ final class ProjectController extends AbstractController
                 'summary' => $t->getSummary(),
                 'status' => $t->getStatus(),
                 'is_new' => $t->isNewAsOf($now),
+                'board' => $this->boardName($t->getBoard()),
             ], $tickets),
             'ticket_count' => count($tickets),
+            'show_boards' => $project->getBoards()->count() > 1,
             'last_refreshed' => $lastRefreshed,
         ]);
     }
@@ -472,6 +476,15 @@ final class ProjectController extends AbstractController
         );
 
         return $this->render('projects/wizard/_jira-test-result.html.twig', ['result' => $result]);
+    }
+
+    private function boardName(?JiraBoard $board): ?string
+    {
+        if ($board === null) {
+            return null;
+        }
+
+        return $board->getLabel() ?? $board->getProjectKey();
     }
 
     /**
